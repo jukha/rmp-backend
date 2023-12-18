@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const morgan = require("morgan");
 const appRouter = require("./src/routes/index");
 const cors = require("cors");
+const passport = require("./config/passport-config"); 
 
 dotenv.config();
 const app = express();
@@ -21,7 +22,10 @@ app.use(cors());
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 app.use(express.json({ extended: true, limit: "50mb" }));
 
+app.use(passport.initialize()); // Initialize Passport middleware
+
 app.use("/api/v1", appRouter);
+
 app.listen(port, () => {
   console.log(`Server listening on port 🚀: ${port}`);
 });

@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
+const bcrypt = require("bcryptjs");
 
-export const hashPassword = async (password) => {
+exports.hashPassword = async (password) => {
   if (!password) {
     return false;
   }
@@ -21,11 +21,11 @@ const bcryptHash = (password) =>
     });
   });
 
-export const comparePassword = async (password, hashedPassword) => {
+exports.comparePassword = async (password, hashedPassword) => {
   if (!password) {
     return false;
   }
-  const isMatch = await bcryptCompare(hashedPassword,password);
+  const isMatch = await bcryptCompare(hashedPassword, password);
   return isMatch;
 };
 
