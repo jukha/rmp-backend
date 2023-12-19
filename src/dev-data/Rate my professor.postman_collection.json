@@ -1,0 +1,198 @@
+{
+	"info": {
+		"_postman_id": "3e5372eb-fe02-429a-baec-6085597fd575",
+		"name": "Rate my professor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23136892"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"admin@gmail.com\",\r\n    \"password\": \"12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/users/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Signup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"admin@gmail.com\",\r\n    \"firstName\": \"Muhammad\",\r\n    \"lastName\": \"Junaid\",\r\n    \"password\": \"12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/users/signup",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"users",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Jobs",
+			"item": [
+				{
+					"name": "Search jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/jobs/search?q=strident",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jobs",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "strident"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a job",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/jobs/strident",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jobs",
+								"strident"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Companies",
+			"item": [
+				{
+					"name": "Get a company",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/companies/def-corporation",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"companies",
+								"def-corporation"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search companies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/companies/search?q=corporation",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"companies",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "corporation"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a company",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"XYZ Inc.\",\r\n    \"description\": \"Lorem ispum description for a company\",\r\n    \"location\": \"Silicon valley, USA\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/companies/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"companies",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
