@@ -57,31 +57,36 @@ exports.signup = async (req, res, next) => {
 exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
+
     if (user) {
       const isPasswordCorrect = await comparePassword(
         req.body.password,
         user.password
       );
+
       if (isPasswordCorrect) {
-        const token = await generateAuthToken(user);
+        const token = await jwtUtility.generateAuthToken(user);
         return res.status(200).send({
           success: true,
           message: "Logged in successfully",
           data: { user: user, token: token },
         });
       }
+
       return res
         .status(400)
         .send({ success: false, message: "Incorrect password" });
     }
+
     return res.status(400).send({ success: false, message: "Incorrect email" });
   } catch (error) {
+    console.error("Error in login controller:", error);
+
     return res
-      .status(503)
+      .status(500)
       .send({ success: false, message: "Internal Server Error." });
   }
 };
-
 
 exports.googleAuth = passport.authenticate("google", {
   scope: ["profile"],
