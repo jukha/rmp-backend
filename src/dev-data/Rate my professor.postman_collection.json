@@ -11,6 +11,17 @@
 			"item": [
 				{
 					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"jwt\", pm.response.json().data.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -111,10 +122,76 @@
 					"response": []
 				},
 				{
-					"name": "New Request",
+					"name": "Add job rating",
 					"request": {
-						"method": "GET",
-						"header": []
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"compensation\": 5,\r\n    \"workLifeBalance\": 4,\r\n    \"jobSecurity\": 3,\r\n    \"opportunitiesForGrowth\": 2,\r\n    \"companyCulture\": 4,\r\n    \"jobSatisfaction\": 5,\r\n    \"workload\": 5,\r\n    \"benefits\": 3,\r\n    \"flexibility\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/jobs/live/ratings",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jobs",
+								"live",
+								"ratings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add a job",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Python developer\",\r\n    \"description\": \"Lorem ispum description for a company\",\r\n    \"location\": \"Silicon valley, USA\",\r\n    \"company\": \"65818fdf26c63f824fcaad74\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/jobs",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jobs"
+							]
+						}
 					},
 					"response": []
 				}
@@ -168,11 +245,21 @@
 				{
 					"name": "Add a company",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"XYZ Inc.\",\r\n    \"description\": \"Lorem ispum description for a company\",\r\n    \"location\": \"Silicon valley, USA\"\r\n}",
+							"raw": "{\r\n    \"name\": \"NEW Inc.\",\r\n    \"description\": \"Lorem ispum description for a company\",\r\n    \"location\": \"Silicon valley, USA\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -180,13 +267,50 @@
 							}
 						},
 						"url": {
-							"raw": "{{url}}/companies/",
+							"raw": "{{url}}/companies",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"companies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add company rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"reputation\": 4,\r\n  \"companyCulture\": 5,\r\n  \"opportunitiesForAdvancement\": 3,\r\n  \"workLifeBalance\": 4,\r\n  \"employeeBenefits\": 4,\r\n  \"leadershipAndManagement\": 4,\r\n  \"innovationAndTechnologyAdoption\": 3,\r\n  \"diversityAndInclusion\": 5,\r\n  \"corporateSocialResponsibility\": 4,\r\n  \"financialStability\": 5\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/companies/new-inc/ratings",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"companies",
-								""
+								"new-inc",
+								"ratings"
 							]
 						}
 					},

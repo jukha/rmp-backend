@@ -9,40 +9,59 @@ dotenv.config();
 const DB = process.env.LOCAL_DB;
 
 mongoose.connect(DB).then(() => {
-  console.log("Successfully connected to database");
+  console.log("Successfully connected to the database");
 });
 
-// READ JSON FILE
+// READ JSON FILES
 const companies = JSON.parse(fs.readFileSync(`${__dirname}/dummyCompanies.json`));
 const jobs = JSON.parse(fs.readFileSync(`${__dirname}/dummyJobs.json`));
 
 // IMPORT DATA INTO DB
 const importData = async () => {
   try {
-    await Company.create(companies);
-    await Job.create(jobs);
-
-    console.log("Data successfully loaded");
+    // Check for additional arguments to determine which collection to import
+    if (process.argv.includes("--companies")) {
+      await Company.create(companies);
+      console.log("Companies data successfully loaded");
+    } else if (process.argv.includes("--jobs")) {
+      await Job.create(jobs);
+      console.log("Jobs data successfully loaded");
+    } else {
+      console.log("Please specify which collection to import (--companies or --jobs)");
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
+  } finally {
+    process.exit();
   }
-  process.exit();
 };
 
-// DELTE ALL DATA FROM DB
+// DELETE DATA FROM DB
 const deleteData = async () => {
   try {
-    await Company.deleteMany();
-    await Job.deleteMany();
-    console.log("Data successfully deleted");
+    // Check for additional arguments to determine which collection to delete
+    if (process.argv.includes("--companies")) {
+      await Company.deleteMany();
+      console.log("Companies data successfully deleted");
+    } else if (process.argv.includes("--jobs")) {
+      await Job.deleteMany();
+      console.log("Jobs data successfully deleted");
+    } else {
+      console.log("Please specify which collection to delete (--companies or --jobs)");
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
+  } finally {
+    process.exit();
   }
-  process.exit();
 };
 
+// Determine if it's an import or delete operation
 if (process.argv[2] === "--import") {
   importData();
 } else if (process.argv[2] === "--delete") {
   deleteData();
+} else {
+  console.log("Invalid command. Use --import or --delete flag to perform operations.");
+  process.exit();
 }
