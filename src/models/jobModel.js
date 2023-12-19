@@ -61,7 +61,7 @@ const jobSchema = new mongoose.Schema({
       },
     },
   ],
-  slug: String
+  slug: String,
 });
 
 jobSchema.methods.calculateOverallRating = function () {
@@ -71,7 +71,8 @@ jobSchema.methods.calculateOverallRating = function () {
 jobSchema.index({ title: "text", description: "text" });
 
 jobSchema.pre("save", function (next) {
-  this.slug = slugify(this.title, { lower: true });
+  const removeSpecialChars = (str) => str.replace(/[*+~.()'"!:@]/g, "");
+  this.slug = slugify(removeSpecialChars(this.title), { lower: true });
   next();
 });
 

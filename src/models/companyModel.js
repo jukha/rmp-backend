@@ -73,8 +73,14 @@ companySchema.methods.calculateOverallRating = function () {
   return calculateOverallRating(this.ratings);
 };
 
+companySchema.methods.addRating = function (rating) {
+  this.ratings.push(rating);
+};
+
 companySchema.pre("save", function (next) {
-  this.slug = slugify(this.name, { lower: true });
+  const removeSpecialChars = (str) => str.replace(/[*+~.()'"!:@]/g, "");
+  this.slug = slugify(removeSpecialChars(this.name), { lower: true });
+  next();
   next();
 });
 
