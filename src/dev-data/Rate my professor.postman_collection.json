@@ -73,6 +73,14 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Add/Remove a job",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
 				}
 			]
 		},
