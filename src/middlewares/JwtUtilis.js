@@ -12,6 +12,7 @@ exports.generateAuthToken = async (user) => {
 };
 
 exports.verifyAuthToken = async (req, res, next) => {
+  console.log('hi');
   const token = req.headers["authorization"];
   if (!token) {
     return res.status(403).send({ message: "Token not found" });
