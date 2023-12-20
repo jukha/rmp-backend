@@ -1,5 +1,4 @@
-const passport = require("passport");
-
+const axios = require("axios");
 const {
   hashPassword,
   comparePassword,
@@ -88,58 +87,54 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.googleAuth = passport.authenticate("google", {
-  scope: ["profile"],
-});
-
-exports.googleCallback = async (req, res, next) => {
-  passport.authenticate("google", async (err, user) => {
-    try {
-      if (err) {
-        console.error("Error in Google Callback:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Internal Server Error",
-        });
+exports.googleAuth = async (req, res, next) => {
+  try {
+    const { googleAccessToken } = req.body;
+    const response = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${googleAccessToken}`,
+        },
       }
+    );
 
-      // The user profile is available in req.user
-      const { id, displayName, emails } = user;
+    const {
+      sub: googleId,
+      given_name: firstName,
+      family_name: lastName,
+      email,
+    } = response.data;
 
-      const existingUser = await User.findOne({ googleId: id });
+    const existingUser = await User.findOne({ googleId });
 
-      if (existingUser) {
-        const token = await jwtUtility.generateAuthToken(existingUser);
-        return res.status(200).json({
-          success: true,
-          message: "Logged in successfully with Google",
-          data: { user: existingUser, token: token },
-        });
-      }
-
-      // If the user doesn't exist, create a new user in the database
-      const newUser = await User.create({
-        firstName: displayName.split(" ")[0],
-        lastName: displayName.split(" ").slice(1).join(" "),
-        email: emails[0].value,
-        googleId: id,
-      });
-
-      const token = await jwtUtility.generateAuthToken(newUser);
-
+    if (existingUser) {
+      const token = await jwtUtility.generateAuthToken(existingUser);
       return res.status(200).json({
         success: true,
-        message: "Account created and logged in successfully with Google",
-        data: { user: newUser, token: token },
-      });
-    } catch (error) {
-      console.error("Error in Google Callback:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
+        message: "Logged in successfully with Google",
+        data: { user: existingUser, token: token },
       });
     }
-  })(req, res, next);
+
+    // If the user doesn't exist, create a new user in the database
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email,
+      googleId,
+    });
+
+    const token = await jwtUtility.generateAuthToken(newUser);
+
+    return res.status(200).json({
+      success: true,
+      message: "Account created and logged in successfully with Google",
+      data: { user: newUser, token: token },
+    });
+  } catch (err) {
+    res.status(400).json({ message: `Invalid access token!${err.message}` });
+  }
 };
 
 exports.saveJob = async (req, res) => {
