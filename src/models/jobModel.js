@@ -1,74 +1,166 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
-const calculateOverallRating = require("../utils/calculateRating");
 
-const jobSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  company: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Company",
-    required: true,
-  },
-  ratings: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
+const jobSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    ratings: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        compensation: {
+          type: Number,
+          required: true,
+        },
+        workLifeBalance: {
+          type: Number,
+          required: true,
+        },
+        jobSecurity: {
+          type: Number,
+          required: true,
+        },
+        opportunitiesForGrowth: {
+          type: Number,
+          required: true,
+        },
+        companyCulture: {
+          type: Number,
+          required: true,
+        },
+        jobSatisfaction: {
+          type: Number,
+          required: true,
+        },
+        workload: {
+          type: Number,
+          required: true,
+        },
+        benefits: {
+          type: Number,
+          required: true,
+        },
+        flexibility: {
+          type: Number,
+          required: true,
+        },
       },
+    ],
+    averageRatings: {
       compensation: {
         type: Number,
-        required: true,
+        default: 0,
       },
       workLifeBalance: {
         type: Number,
-        required: true,
+        default: 0,
       },
       jobSecurity: {
         type: Number,
-        required: true,
+        default: 0,
       },
       opportunitiesForGrowth: {
         type: Number,
-        required: true,
+        default: 0,
       },
       companyCulture: {
         type: Number,
-        required: true,
+        default: 0,
       },
       jobSatisfaction: {
         type: Number,
-        required: true,
+        default: 0,
       },
       workload: {
         type: Number,
-        required: true,
+        default: 0,
       },
       benefits: {
         type: Number,
-        required: true,
+        default: 0,
       },
       flexibility: {
         type: Number,
-        required: true,
+        default: 0,
       },
     },
-  ],
-  slug: String,
-});
+    averageOverallRating: { type: Number, default: 0 },
+    slug: String,
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
-jobSchema.methods.calculateOverallRating = function () {
-  return calculateOverallRating(this.ratings);
+jobSchema.methods.addRating = function (rating) {
+  this.ratings.push(rating);
+  this.updateAverageRatings();
+};
+
+jobSchema.methods.updateAverageRatings = function () {
+  const totalRatings = this.ratings.length;
+
+  // Update average for each parameter
+  const ratingParameters = [
+    "compensation",
+    "workLifeBalance",
+    "jobSecurity",
+    "opportunitiesForGrowth",
+    "companyCulture",
+    "jobSatisfaction",
+    "workload",
+    "benefits",
+    "flexibility",
+  ];
+
+  ratingParameters.forEach((parameter) => {
+    const sumParameterRating = this.ratings.reduce(
+      (sum, rating) => sum + rating[parameter],
+      0
+    );
+
+    // Handle case where there are no ratings for the parameter
+    if (totalRatings === 0) {
+      this.averageRatings[parameter] = 0;
+    } else {
+      this.averageRatings[parameter] = sumParameterRating / totalRatings;
+    }
+  });
+
+  // Calculate average overall rating based on the averages of each parameter
+  const sumOverallRating = ratingParameters.reduce(
+    (sum, parameter) => sum + this.averageRatings[parameter],
+    0
+  );
+  this.averageOverallRating =
+    totalRatings === 0 ? 0 : sumOverallRating / ratingParameters.length;
 };
 
 jobSchema.index({ title: "text", description: "text" });
+
+jobSchema.virtual("companyDetails", {
+  type: "ObjectId",
+  ref: "Company",
+  localField: "company",
+  foreignField: "_id",
+  justOne: true,
+});
 
 jobSchema.pre("save", function (next) {
   const removeSpecialChars = (str) => str.replace(/[*+~.()'"!:@]/g, "");

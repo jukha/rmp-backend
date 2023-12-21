@@ -58,6 +58,13 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (user) {
+      if (user.googleId) {
+        return res.status(400).send({
+          success: false,
+          message:
+            "This email is registered using Google. Please login with Google.",
+        });
+      }
       const isPasswordCorrect = await comparePassword(
         req.body.password,
         user.password

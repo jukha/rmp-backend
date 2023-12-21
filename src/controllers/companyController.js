@@ -38,13 +38,10 @@ exports.getCompanyBySlug = async (req, res) => {
         .json({ success: false, message: "Company not found" });
     }
 
-    const overallRating = company.calculateOverallRating();
-
     return res.status(200).json({
       success: true,
       data: {
-        company: company,
-        overallRating: overallRating,
+        company,
       },
     });
   } catch (error) {
@@ -133,5 +130,22 @@ exports.addRating = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+exports.companySuggestions = async (req, res) => {
+  try {
+    const keyword = req.query.keyword.toLowerCase();
+
+    const companySuggestions = await Company.find({
+      name: { $regex: keyword, $options: "i" },
+    })
+      .limit(5)
+      .select(["name", "slug"]);
+
+    res.status(200).json({ suggestions: companySuggestions });
+  } catch (error) {
+    console.error("Error in company suggestions:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

@@ -2,14 +2,14 @@ const Job = require("../models/jobModel");
 
 exports.addJob = async (req, res) => {
   try {
-    const { title, description, location,company } = req.body;
+    const { title, description, location, company } = req.body;
 
     const newJob = new Job({
       title: title,
       description: description,
       location: location,
       company: company,
-      ratings: []
+      ratings: [],
     });
 
     const savedJob = await newJob.save();
@@ -31,19 +31,19 @@ exports.getJobBySlug = async (req, res) => {
   try {
     const jobSlug = req.params.jobSlug;
 
-    const job = await Job.findOne({ slug: jobSlug });
+    const job = await Job.findOne({ slug: jobSlug }).populate({
+      path: "companyDetails",
+      select: "-__v",
+    });
 
     if (!job) {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    const overallRating = job.calculateOverallRating();
-
     return res.status(200).json({
       success: true,
       data: {
-        job: job,
-        overallRating: overallRating,
+        job,
       },
     });
   } catch (error) {
@@ -51,6 +51,23 @@ exports.getJobBySlug = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+exports.jobSuggestions = async (req, res) => {
+  try {
+    const keyword = req.query.keyword.toLowerCase();
+
+    const jobSuggestions = await Job.find({
+      title: { $regex: keyword, $options: "i" },
+    })
+      .limit(5)
+      .select(["title", "slug"]);
+
+    res.status(200).json({ suggestions: jobSuggestions });
+  } catch (error) {
+    console.error("Error in job suggestions:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -114,7 +131,7 @@ exports.addJobRating = async (req, res) => {
       flexibility,
     };
 
-    job.ratings.push(newRating);
+    job.addRating(newRating);
 
     await job.save();
 
