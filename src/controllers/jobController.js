@@ -107,6 +107,7 @@ exports.addJobRating = async (req, res) => {
       workload,
       benefits,
       flexibility,
+      ratingText,
     } = req.body;
 
     // Use req.user to get the user information from the decoded token
@@ -119,7 +120,6 @@ exports.addJobRating = async (req, res) => {
     }
 
     const newRating = {
-      user: userId,
       compensation,
       workLifeBalance,
       jobSecurity,
@@ -131,7 +131,7 @@ exports.addJobRating = async (req, res) => {
       flexibility,
     };
 
-    job.addRating(newRating);
+    job.addRating(newRating, userId, ratingText);
 
     await job.save();
 

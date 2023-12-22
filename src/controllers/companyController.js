@@ -89,6 +89,7 @@ exports.addRating = async (req, res) => {
       diversityAndInclusion,
       corporateSocialResponsibility,
       financialStability,
+      ratingText,
     } = req.body;
 
     // Use req.user to get the user information from the decoded token
@@ -103,7 +104,6 @@ exports.addRating = async (req, res) => {
     }
 
     const newRating = {
-      user: userId,
       reputation,
       companyCulture,
       opportunitiesForAdvancement,
@@ -116,7 +116,7 @@ exports.addRating = async (req, res) => {
       financialStability,
     };
 
-    company.addRating(newRating);
+    company.addRating(newRating, userId, ratingText);
 
     await company.save();
 

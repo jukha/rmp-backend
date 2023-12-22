@@ -23,41 +23,54 @@ const jobSchema = new mongoose.Schema(
           ref: "User",
           required: true,
         },
-        compensation: {
-          type: Number,
-          required: true,
+        createdAt: {
+          type: Date,
+          default: Date.now,
         },
-        workLifeBalance: {
-          type: Number,
-          required: true,
+        text: {
+          type: String,
         },
-        jobSecurity: {
+        average: {
           type: Number,
-          required: true,
+          default: 0,
         },
-        opportunitiesForGrowth: {
-          type: Number,
-          required: true,
-        },
-        companyCulture: {
-          type: Number,
-          required: true,
-        },
-        jobSatisfaction: {
-          type: Number,
-          required: true,
-        },
-        workload: {
-          type: Number,
-          required: true,
-        },
-        benefits: {
-          type: Number,
-          required: true,
-        },
-        flexibility: {
-          type: Number,
-          required: true,
+        data: {
+          compensation: {
+            type: Number,
+            required: true,
+          },
+          workLifeBalance: {
+            type: Number,
+            required: true,
+          },
+          jobSecurity: {
+            type: Number,
+            required: true,
+          },
+          opportunitiesForGrowth: {
+            type: Number,
+            required: true,
+          },
+          companyCulture: {
+            type: Number,
+            required: true,
+          },
+          jobSatisfaction: {
+            type: Number,
+            required: true,
+          },
+          workload: {
+            type: Number,
+            required: true,
+          },
+          benefits: {
+            type: Number,
+            required: true,
+          },
+          flexibility: {
+            type: Number,
+            required: true,
+          },
         },
       },
     ],
@@ -108,48 +121,83 @@ const jobSchema = new mongoose.Schema(
   }
 );
 
-jobSchema.methods.addRating = function (rating) {
-  this.ratings.push(rating);
-  this.updateAverageRatings();
-};
-
 jobSchema.methods.updateAverageRatings = function () {
   const totalRatings = this.ratings.length;
 
-  // Update average for each parameter
-  const ratingParameters = [
-    "compensation",
-    "workLifeBalance",
-    "jobSecurity",
-    "opportunitiesForGrowth",
-    "companyCulture",
-    "jobSatisfaction",
-    "workload",
-    "benefits",
-    "flexibility",
-  ];
+  // Calculate average for each parameter
+  this.ratings.forEach((rating) => {
+    const data = rating.data;
+    const ratingParameterKeys = Object.keys(data);
 
-  ratingParameters.forEach((parameter) => {
-    const sumParameterRating = this.ratings.reduce(
-      (sum, rating) => sum + rating[parameter],
+    ratingParameterKeys.forEach((parameter) => {
+      this.averageRatings[parameter] =
+        (this.averageRatings[parameter] * (totalRatings - 1) +
+          data[parameter]) /
+        totalRatings;
+    });
+  });
+
+  // Calculate overall rating based on the averages of each parameter
+  this.averageOverallRating = this.calculateOverallRating(this.averageRatings);
+
+  this.markModified("averageRatings"); // Mark the field as modified to ensure it gets saved
+  this.markModified("averageOverallRating"); // Mark overall rating as modified
+};
+
+jobSchema.methods.calculateOverallRating = function (data) {
+  const ratingParameterKeys = Object.keys(data);
+
+  const sumOverallRating = ratingParameterKeys.reduce(
+    (sum, parameter) => sum + data[parameter],
+    0
+  );
+
+  return ratingParameterKeys.length === 0
+    ? 0
+    : Number((sumOverallRating / ratingParameterKeys.length).toFixed(2));
+};
+
+jobSchema.methods.addRating = function (rating, userId, ratingText) {
+  // Calcuate the average of the document instance
+  const ratingValues = Object.values(rating);
+  const totalValues = ratingValues.length;
+  const sum = ratingValues.reduce((acc, value) => acc + value, 0);
+  const averageOfDocument = Number(
+    (totalValues === 0 ? 0 : sum / totalValues).toFixed(2)
+  );
+  this.ratings.push({
+    user: userId,
+    text: ratingText,
+    average: averageOfDocument,
+    data: rating,
+  });
+
+  // Update the average ratings for the job
+  this.updateAverageRatings();
+
+  // Calculate the average of each individual rating
+  this.calculateIndividualRatingAverages();
+
+  // Mark modified fields to ensure they get saved
+  this.markModified("averageRatings");
+  this.markModified("ratings");
+  this.markModified("averageOverallRating");
+};
+
+jobSchema.methods.calculateIndividualRatingAverages = function () {
+  // Iterate through each parameter
+  const ratingParameterKeys = Object.keys(this.averageRatings);
+
+  ratingParameterKeys.forEach((parameter) => {
+    // Calculate the average for the parameter based on individual ratings
+    const sumParameter = this.ratings.reduce(
+      (sum, rating) => sum + rating.data[parameter],
       0
     );
 
-    // Handle case where there are no ratings for the parameter
-    if (totalRatings === 0) {
-      this.averageRatings[parameter] = 0;
-    } else {
-      this.averageRatings[parameter] = sumParameterRating / totalRatings;
-    }
+    this.averageRatings[parameter] =
+      this.ratings.length === 0 ? 0 : sumParameter / this.ratings.length;
   });
-
-  // Calculate average overall rating based on the averages of each parameter
-  const sumOverallRating = ratingParameters.reduce(
-    (sum, parameter) => sum + this.averageRatings[parameter],
-    0
-  );
-  this.averageOverallRating =
-    totalRatings === 0 ? 0 : sumOverallRating / ratingParameters.length;
 };
 
 jobSchema.index({ title: "text", description: "text" });

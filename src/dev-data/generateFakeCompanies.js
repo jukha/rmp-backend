@@ -14,3 +14,4 @@ const dummyCompanies = Array.from(
 
 const filePath = `${__dirname}/dummyCompanies.json`;
 fs.writeFileSync(filePath, JSON.stringify(dummyCompanies, null, 2));
+console.log(`Dummy compnies data has been generated and saved to ${filePath}`);
