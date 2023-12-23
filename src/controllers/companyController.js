@@ -30,7 +30,10 @@ exports.getCompanyBySlug = async (req, res) => {
   try {
     const companySlug = req.params.companySlug;
 
-    const company = await Company.findOne({ slug: companySlug });
+    const company = await Company.findOne({ slug: companySlug }).populate({
+      path: "ratings.user",
+      select: "firstName lastName",
+    });
 
     if (!company) {
       return res
@@ -51,7 +54,6 @@ exports.getCompanyBySlug = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
-
 exports.searchCompanies = async (req, res) => {
   try {
     const keyword = req.query.q;

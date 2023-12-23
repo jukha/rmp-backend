@@ -144,30 +144,4 @@ exports.googleAuth = async (req, res, next) => {
   }
 };
 
-exports.saveJob = async (req, res) => {
-  try {
-    const user = req.user;
-    const jobId = req.params.jobId;
 
-    // Check if the job is already saved
-    const indexOfSavedJob = user.savedJobs.indexOf(jobId);
-    if (indexOfSavedJob !== -1) {
-      // If already saved, remove the job
-      user.savedJobs.splice(indexOfSavedJob, 1);
-    } else {
-      // If not saved, add the job
-      user.savedJobs.push(jobId);
-    }
-
-    await user.save();
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Job status updated successfully" });
-  } catch (error) {
-    console.error("Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
-  }
-};
