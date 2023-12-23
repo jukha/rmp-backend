@@ -77,8 +77,56 @@
 				{
 					"name": "Add/Remove a job",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/users/save-job/65818fe576f64e02a11eaff7",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"users",
+								"save-job",
+								"65818fe576f64e02a11eaff7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user saved jobs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{url}}/saved-jobs",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"saved-jobs"
+							]
+						}
 					},
 					"response": []
 				}
@@ -146,7 +194,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"compensation\": 5,\r\n    \"workLifeBalance\": 4,\r\n    \"jobSecurity\": 3,\r\n    \"opportunitiesForGrowth\": 2,\r\n    \"companyCulture\": 4,\r\n    \"jobSatisfaction\": 5,\r\n    \"workload\": 5,\r\n    \"benefits\": 3,\r\n    \"flexibility\": 2\r\n}",
+							"raw": "{\r\n    \"compensation\": 1,\r\n    \"workLifeBalance\": 1,\r\n    \"jobSecurity\": 1,\r\n    \"opportunitiesForGrowth\": 1,\r\n    \"companyCulture\": 1,\r\n    \"jobSatisfaction\": 1,\r\n    \"workload\": 1,\r\n    \"benefits\": 1,\r\n    \"flexibility\": 1,\r\n    \"ratingText\": \"Gread company\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -154,13 +202,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{url}}/jobs/live/ratings",
+							"raw": "{{url}}/jobs/sick/ratings",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"jobs",
-								"live",
+								"sick",
 								"ratings"
 							]
 						}
@@ -214,13 +262,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/companies/def-corporation",
+							"raw": "{{url}}/companies/goodwin-nitzsche",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"companies",
-								"def-corporation"
+								"goodwin-nitzsche"
 							]
 						}
 					},
@@ -303,7 +351,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"reputation\": 4,\r\n  \"companyCulture\": 5,\r\n  \"opportunitiesForAdvancement\": 3,\r\n  \"workLifeBalance\": 4,\r\n  \"employeeBenefits\": 4,\r\n  \"leadershipAndManagement\": 4,\r\n  \"innovationAndTechnologyAdoption\": 3,\r\n  \"diversityAndInclusion\": 5,\r\n  \"corporateSocialResponsibility\": 4,\r\n  \"financialStability\": 5\r\n}",
+							"raw": "{\r\n  \"reputation\": 4,\r\n  \"companyCulture\": 5,\r\n  \"opportunitiesForAdvancement\": 3,\r\n  \"workLifeBalance\": 4,\r\n  \"employeeBenefits\": 4,\r\n  \"leadershipAndManagement\": 4,\r\n  \"innovationAndTechnologyAdoption\": 3,\r\n  \"diversityAndInclusion\": 5,\r\n  \"corporateSocialResponsibility\": 4,\r\n  \"financialStability\": 5,\r\n  \"ratingText\": \"Gread company\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -311,13 +359,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{url}}/companies/new-inc/ratings",
+							"raw": "{{url}}/companies/kunde-bauch/ratings",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"companies",
-								"new-inc",
+								"kunde-bauch",
 								"ratings"
 							]
 						}
