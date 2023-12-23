@@ -129,21 +129,34 @@ companySchema.methods.calculateOverallRating = function (data) {
 };
 
 companySchema.methods.addRating = function (rating, userId, ratingText) {
-  // Calcuate the average of the document instance
-  const ratingValues = Object.values(rating);
-  const totalValues = ratingValues.length;
-  const sum = ratingValues.reduce((acc, value) => acc + value, 0);
-  const averageOfDocument = Number(
-    (totalValues === 0 ? 0 : sum / totalValues).toFixed(2)
+  // Check if the user has already rated this company
+  const existingRating = this.ratings.find(
+    (r) => r.user.toString() === userId.toString()
   );
-  this.ratings.push({
-    user: userId,
-    text: ratingText,
-    average: averageOfDocument,
-    data: rating,
-  });
 
-  // Update the average ratings for the job
+  if (existingRating) {
+    // Update the existing rating
+    existingRating.data = rating;
+    existingRating.text = ratingText;
+  } else {
+    // Calculate the average of the document instance
+    const ratingValues = Object.values(rating);
+    const totalValues = ratingValues.length;
+    const sum = ratingValues.reduce((acc, value) => acc + value, 0);
+    const averageOfDocument = Number(
+      (totalValues === 0 ? 0 : sum / totalValues).toFixed(2)
+    );
+
+    // Add a new rating
+    this.ratings.push({
+      user: userId,
+      text: ratingText,
+      average: averageOfDocument,
+      data: rating,
+    });
+  }
+
+  // Update the average ratings for the company
   this.updateAverageRatings();
 
   // Calculate the average of each individual rating

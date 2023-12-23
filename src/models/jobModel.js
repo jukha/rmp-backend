@@ -158,19 +158,30 @@ jobSchema.methods.calculateOverallRating = function (data) {
 };
 
 jobSchema.methods.addRating = function (rating, userId, ratingText) {
-  // Calcuate the average of the document instance
+  // Calculate the average of the document instance
   const ratingValues = Object.values(rating);
   const totalValues = ratingValues.length;
   const sum = ratingValues.reduce((acc, value) => acc + value, 0);
   const averageOfDocument = Number(
     (totalValues === 0 ? 0 : sum / totalValues).toFixed(2)
   );
-  this.ratings.push({
-    user: userId,
-    text: ratingText,
-    average: averageOfDocument,
-    data: rating,
-  });
+
+  // Check if the user has already rated the job, then update the existing rating
+  const existingRating = this.ratings.find((r) => r.user.equals(userId));
+
+  if (existingRating) {
+    existingRating.text = ratingText;
+    existingRating.data = rating;
+    existingRating.average = averageOfDocument;
+  } else {
+    // If not, add a new rating
+    this.ratings.push({
+      user: userId,
+      text: ratingText,
+      average: averageOfDocument,
+      data: rating,
+    });
+  }
 
   // Update the average ratings for the job
   this.updateAverageRatings();
