@@ -41,7 +41,7 @@ async function generateDummyJobs() {
 
     for (let i = 0; i < numberOfJobsPerCompany; i++) {
       dummyJobs.push({
-        title: faker.word.adjective(),
+        title: faker.person.jobTitle(),
         description: faker.lorem.sentence(),
         company: firstCompany._id,
       });

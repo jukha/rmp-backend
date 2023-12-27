@@ -54,4 +54,13 @@ Run this script to delete data from the jobs collection:
 
 ```bash
 node src/dev-data/import-dev-data.js --delete --jobs
+
+```
+
+##### Delete Saved Jobs
+
+To delete the data from the collections run this script:
+
+```bash
+node src/dev-data/import-dev-data.js --delete --savedJobs
 ```

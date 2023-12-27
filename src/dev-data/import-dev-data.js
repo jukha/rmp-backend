@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const Company = require("../models/companyModel");
 const Job = require("../models/jobModel");
+const SavedJob = require("../models/SavedJobModel");
 
 dotenv.config();
 
@@ -13,7 +14,9 @@ mongoose.connect(DB).then(() => {
 });
 
 // READ JSON FILES
-const companies = JSON.parse(fs.readFileSync(`${__dirname}/dummyCompanies.json`));
+const companies = JSON.parse(
+  fs.readFileSync(`${__dirname}/dummyCompanies.json`)
+);
 const jobs = JSON.parse(fs.readFileSync(`${__dirname}/dummyJobs.json`));
 
 // IMPORT DATA INTO DB
@@ -27,7 +30,9 @@ const importData = async () => {
       await Job.create(jobs);
       console.log("Jobs data successfully loaded");
     } else {
-      console.log("Please specify which collection to import (--companies or --jobs)");
+      console.log(
+        "Please specify which collection to import (--companies or --jobs)"
+      );
     }
   } catch (error) {
     console.error(error);
@@ -46,8 +51,13 @@ const deleteData = async () => {
     } else if (process.argv.includes("--jobs")) {
       await Job.deleteMany();
       console.log("Jobs data successfully deleted");
+    } else if (process.argv.includes("--savedJobs")) {
+      await SavedJob.deleteMany();
+      console.log("Saved Jobs data successfully deleted");
     } else {
-      console.log("Please specify which collection to delete (--companies or --jobs)");
+      console.log(
+        "Please specify which collection to delete (--companies, --jobs or --savedJobs)"
+      );
     }
   } catch (error) {
     console.error(error);
@@ -62,6 +72,8 @@ if (process.argv[2] === "--import") {
 } else if (process.argv[2] === "--delete") {
   deleteData();
 } else {
-  console.log("Invalid command. Use --import or --delete flag to perform operations.");
+  console.log(
+    "Invalid command. Use --import or --delete flag to perform operations."
+  );
   process.exit();
 }
