@@ -5,15 +5,16 @@ const morgan = require("morgan");
 const appRouter = require("./src/routes/index");
 const cors = require("cors");
 
-
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-let mongoURI = process.env.LOCAL_DB;
+// let mongoURI = process.env.LOCAL_DB;
+let mongoURI = process.env.CLUSTER_DB_URI;
+const dbName = process.env.DB_NAME;
 
 mongoose
-  .connect(mongoURI)
+  .connect(mongoURI, { dbName })
   .then(() => console.log("DB connection is successful."))
   .catch((error) => console.error("Connection error", error.message));
 

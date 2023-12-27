@@ -69,7 +69,7 @@ exports.jobSuggestions = async (req, res) => {
       title: { $regex: keyword, $options: "i" },
     })
       .limit(5)
-      .select(["title", "slug"]);
+      // .select(["title", "slug"]);
 
     res.status(200).json({ suggestions: jobSuggestions });
   } catch (error) {

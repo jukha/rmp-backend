@@ -7,9 +7,10 @@ const SavedJob = require("../models/SavedJobModel");
 
 dotenv.config();
 
-const DB = process.env.LOCAL_DB;
+const dbURI = process.env.CLUSTER_DB_URI;
+const dbName = process.env.DB_NAME;
 
-mongoose.connect(DB).then(() => {
+mongoose.connect(dbURI, { dbName }).then(() => {
   console.log("Successfully connected to the database");
 });
 

@@ -143,7 +143,7 @@ exports.companySuggestions = async (req, res) => {
       name: { $regex: keyword, $options: "i" },
     })
       .limit(5)
-      .select(["name", "slug"]);
+      // .select(["name", "slug"]);
 
     res.status(200).json({ suggestions: companySuggestions });
   } catch (error) {
