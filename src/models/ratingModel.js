@@ -1,0 +1,47 @@
+const mongoose = require("mongoose");
+
+const ratingSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Job",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  textContent: String,
+  parametersRating: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true,
+  },
+  ratingAverage: { type: Number, default: 0 },
+});
+
+ratingSchema.pre("save", async function (next) {
+  // Calculate the average for each rating parameter
+  const ratingParameterKeys = Object.keys(this.parametersRating);
+  const totalRatingParameters = ratingParameterKeys.length;
+
+  this.ratingAverage =
+    totalRatingParameters === 0
+      ? 0
+      : ratingParameterKeys.reduce(
+          (sum, parameter) => sum + this.parametersRating[parameter],
+          0
+        ) / totalRatingParameters;
+
+  next();
+});
+
+const Rating = mongoose.model("Rating", ratingSchema);
+
+module.exports = Rating;

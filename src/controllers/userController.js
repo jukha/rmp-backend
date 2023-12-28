@@ -5,6 +5,8 @@ const {
 } = require("../middlewares/EncryptionUtilis");
 const jwtUtility = require("../middlewares/JwtUtilis");
 const User = require("../models/userModel");
+const Job = require("../models/jobModel");
+const Company = require("../models/companyModel");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -230,3 +232,23 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+exports.getRatedJobsAndCompanies = async (req, res) => {
+  const { _id: userId } = req.user;
+
+  try {
+    // Find all jobs where the user has given a rating
+    const ratedJobs = await Job.find({ "ratings.user": userId }).select(
+      "ratings.user"
+    );
+
+    // Find all companies where the user has given a rating
+    const ratedCompanies = await Company.find({
+      "ratings.user": userId,
+    }).select("ratings");
+
+    return res.status(200).json({ ratedJobs, ratedCompanies });
+  } catch (error) {
+    console.error("Error fetching rated jobs and companies:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
