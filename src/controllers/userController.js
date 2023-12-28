@@ -17,6 +17,13 @@ exports.signup = async (req, res, next) => {
         });
       }
 
+      if (req.body.password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: "Password must be at least eight characters long",
+        });
+      }
+
       const hashedPassword = await hashPassword(req.body.password);
       const userCreated = await User.create({
         ...req.body,
@@ -144,4 +151,82 @@ exports.googleAuth = async (req, res, next) => {
   }
 };
 
+exports.updateUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if the user signed up with Google
+    if (existingUser.googleId && req.body.newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot change password for Google sign-up users",
+      });
+    }
+
+    // Verify the old password if provided
+    if (req.body.oldPassword) {
+      const isOldPasswordCorrect = await comparePassword(
+        req.body.oldPassword,
+        existingUser.password
+      );
+
+      if (!isOldPasswordCorrect) {
+        return res.status(401).json({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+    }
+
+    // Update first name and last name if provided in the request body
+    if (req.body.firstName) {
+      existingUser.firstName = req.body.firstName;
+    }
+
+    if (req.body.lastName) {
+      existingUser.lastName = req.body.lastName;
+    }
+
+    // Update password if provided in the request body
+    if (req.body.newPassword) {
+      // Check if the new password meets the minimum length requirement
+      if (req.body.newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: "New password must be at least 8 characters long",
+        });
+      }
+
+      const hashedNewPassword = await hashPassword(req.body.newPassword);
+      existingUser.password = hashedNewPassword;
+    }
+
+    // Save the updated user
+    await existingUser.save();
+
+    // Generate a new token with updated user information
+    existingUser.password = "";
+    const token = await jwtUtility.generateAuthToken(existingUser);
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: { user: existingUser, token },
+    });
+  } catch (error) {
+    console.error("Error in updateUser controller:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
 
