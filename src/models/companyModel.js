@@ -22,7 +22,6 @@ companySchema.index({ name: "text", description: "text" });
 companySchema.pre("save", function (next) {
   const removeSpecialChars = (str) => str.replace(/[*+~.()'"!:@]/g, "");
   this.slug = slugify(removeSpecialChars(this.name), { lower: true });
-  this.updateAverageRatings(); // Recalculate averages before saving
   next();
 });
 

@@ -39,6 +39,13 @@ ratingSchema.virtual("user", {
   justOne: true,
 });
 
+ratingSchema.virtual("job", {
+  ref: "Job",
+  localField: "jobId",
+  foreignField: "_id",
+  justOne: true,
+});
+
 ratingSchema.virtual("company", {
   ref: "Company",
   localField: "companyId",
@@ -54,10 +61,14 @@ ratingSchema.pre("save", async function (next) {
   this.ratingAverage =
     totalRatingParameters === 0
       ? 0
-      : ratingParameterKeys.reduce(
-          (sum, parameter) => sum + this.parametersRating[parameter],
-          0
-        ) / totalRatingParameters;
+      : Number(
+          (
+            ratingParameterKeys.reduce(
+              (sum, parameter) => sum + this.parametersRating[parameter],
+              0
+            ) / totalRatingParameters
+          ).toFixed(1)
+        );
 
   next();
 });

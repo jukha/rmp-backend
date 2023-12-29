@@ -1,6 +1,7 @@
 const Job = require("../models/jobModel");
 const Company = require("../models/companyModel");
 const SavedJob = require("../models/SavedJobModel");
+const ratingsUtil = require("../utils/getRatingsByType");
 
 exports.addJob = async (req, res) => {
   try {
@@ -32,25 +33,32 @@ exports.addJob = async (req, res) => {
 exports.getJobBySlug = async (req, res) => {
   try {
     const jobSlug = req.params.jobSlug;
-
-    const job = await Job.findOne({ slug: jobSlug })
-      .populate({
-        path: "companyDetails",
-        select: "-__v",
-      })
-      .populate({
-        path: "ratings.user",
-        select: "firstName lastName",
-      });
+    const job = await Job.findOne({ slug: jobSlug }).populate({
+      path: "companyDetails",
+      select: "-__v",
+    });
 
     if (!job) {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
+    const { success, data } = await ratingsUtil.getRatings("job", job._id);
+
+    if (!success) {
+      return res.status(404).json({ success: false, message: data });
+    }
+
+    const jobWithRatingsData = {
+      ...job.toObject(),
+      ratings: data.ratings,
+      overallAvgRating: data.overallAvgRating,
+      parametersAvgRatings: data.parametersAvgRatings,
+    };
+
     return res.status(200).json({
       success: true,
       data: {
-        job,
+        job: jobWithRatingsData,
       },
     });
   } catch (error) {
@@ -128,11 +136,29 @@ exports.getJobsByCompany = async (req, res) => {
       savedJobMap[savedJob.job.toString()] = true;
     });
 
-    // Add a new property 'isSaved' to each job indicating whether it is saved by the user
-    const jobsWithSaveStatus = jobs.map((job) => ({
-      ...job.toObject(),
-      isSaved: savedJobMap[job._id.toString()] || false,
-    }));
+    // Array to store promises
+    const jobPromises = [];
+
+    for (const job of jobs) {
+      // Add each promise to the array
+      jobPromises.push(
+        (async () => {
+          const jobRatingSummary = await ratingsUtil.getJobRatingsSummary(
+            job._id
+          );
+
+          return {
+            ...job.toObject(),
+            isSaved: savedJobMap[job._id.toString()] || false,
+            overallAvgRating: jobRatingSummary.data.overallAvgRating,
+            totalRatings: jobRatingSummary.data.totalRatings,
+          };
+        })()
+      );
+    }
+
+    // Use Promise.all to wait for all promises to resolve
+    const jobsWithSaveStatus = await Promise.all(jobPromises);
 
     // Return the response with the updated jobs and company name
     return res.status(200).json({

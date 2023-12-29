@@ -7,6 +7,7 @@ const jwtUtility = require("../middlewares/JwtUtilis");
 const User = require("../models/userModel");
 const Job = require("../models/jobModel");
 const Company = require("../models/companyModel");
+const Rating = require("../models/ratingModel");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -236,19 +237,127 @@ exports.getRatedJobsAndCompanies = async (req, res) => {
   const { _id: userId } = req.user;
 
   try {
-    // Find all jobs where the user has given a rating
-    const ratedJobs = await Job.find({ "ratings.user": userId }).select(
-      "ratings.user"
-    );
+    const [allRatings] = await Promise.all([
+      Rating.find({
+        userId,
+        $or: [{ jobId: { $exists: true } }, { companyId: { $exists: true } }],
+      })
+        .populate({ path: "job", select: "title slug" })
+        .populate({ path: "company", select: "name slug" })
+        .select("jobId companyId parametersRating ratingAverage ratingText")
+        .lean(),
+    ]);
 
-    // Find all companies where the user has given a rating
-    const ratedCompanies = await Company.find({
-      "ratings.user": userId,
-    }).select("ratings");
+    const ratedJobs = allRatings.filter((rating) => rating.jobId);
+    const ratedCompanies = allRatings.filter((rating) => rating.companyId);
+
+    // Remove the excluded fields
+    ratedJobs.forEach((job) => {
+      delete job.jobId;
+      delete job.companyId;
+      delete job.company;
+    });
+
+    ratedCompanies.forEach((company) => {
+      delete company.companyId;
+      delete company.jobId;
+      delete company.job;
+    });
 
     return res.status(200).json({ ratedJobs, ratedCompanies });
   } catch (error) {
     console.error("Error fetching rated jobs and companies:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getUserRatingForJob = async (req, res) => {
+  const { _id: userId } = req.user;
+  const { slug: jobSlug } = req.params;
+
+  try {
+    const job = await Job.findOne({ slug: jobSlug }).populate("companyDetails");
+    console.log("***", job);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        error: "Job not found with the specified slug.",
+      });
+    }
+
+    const userRatingForJob = await Rating.findOne({
+      userId,
+      jobId: job._id,
+    })
+      .select("parametersRating jobId ratingAverage ratingText")
+      .lean();
+
+    if (!userRatingForJob) {
+      return res.status(404).json({
+        success: false,
+        error: "User rating not found for the specified job.",
+      });
+    }
+
+    const jobTitle = job.title;
+    const companyTitle = job.companyDetails.name;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userRatingForJob,
+        jobTitle,
+        companyTitle,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user rating for job:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getUserRatingForCompany = async (req, res) => {
+  const { _id: userId } = req.user;
+  const { slug: companySlug } = req.params;
+
+  try {
+    const company = await Company.findOne({ slug: companySlug });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: "Company not found with the specified slug.",
+      });
+    }
+
+    const userRatingForCompany = await Rating.findOne({
+      userId,
+      companyId: company._id,
+    })
+      .select("parametersRating companyId ratingAverage ratingText")
+      .lean();
+
+    if (!userRatingForCompany) {
+      return res.status(404).json({
+        success: false,
+        error: "User rating not found for the specified company.",
+      });
+    }
+
+    const companyTitle = company.name;
+    const companyLocation = company.location;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userRatingForCompany,
+        companyTitle,
+        companyLocation,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user rating for company:", error.message);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

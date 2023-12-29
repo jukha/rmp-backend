@@ -1,4 +1,5 @@
 const Company = require("../models/companyModel");
+const ratingsUtil = require("../utils/getRatingsByType");
 
 exports.addCompany = async (req, res) => {
   try {
@@ -30,10 +31,7 @@ exports.getCompanyBySlug = async (req, res) => {
   try {
     const companySlug = req.params.companySlug;
 
-    const company = await Company.findOne({ slug: companySlug }).populate({
-      path: "ratings.user",
-      select: "firstName lastName",
-    });
+    const company = await Company.findOne({ slug: companySlug });
 
     if (!company) {
       return res
@@ -41,12 +39,42 @@ exports.getCompanyBySlug = async (req, res) => {
         .json({ success: false, message: "Company not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        company,
-      },
-    });
+    // Array to store promises
+    const promises = [];
+
+    // Fetch ratings using utility function
+    promises.push(
+      (async () => {
+        const { success, data } = await ratingsUtil.getRatings(
+          "company",
+          company._id
+        );
+
+        if (!success) {
+          return res.status(404).json({ success: false, message: data });
+        }
+
+        const companyWithRatingsData = {
+          ...company.toObject(),
+          ratings: data.ratings,
+          overallAvgRating: data.overallAvgRating,
+          parametersAvgRatings: data.parametersAvgRatings,
+        };
+
+        return {
+          success: true,
+          data: {
+            company: companyWithRatingsData,
+          },
+        };
+      })()
+    );
+
+    // Use Promise.all to wait for all promises to resolve
+    const results = await Promise.all(promises);
+
+    // Return the response
+    return res.status(200).json(results[0]);
   } catch (error) {
     console.error("Error:", error);
     return res
@@ -54,6 +82,7 @@ exports.getCompanyBySlug = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
 exports.searchCompanies = async (req, res) => {
   try {
     const keyword = req.query.q;

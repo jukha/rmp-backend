@@ -10,6 +10,8 @@ router.post("/google-auth", userController.googleAuth);
 
 router.use(jwtUtility.verifyAuthToken);
 router.get("/rated-jobs-companies", userController.getRatedJobsAndCompanies);
+router.get("/job-ratings/:slug", userController.getUserRatingForJob);
+router.get("/company-ratings/:slug", userController.getUserRatingForCompany);
 router.patch("/update", userController.updateUser);
 
 module.exports = router;
