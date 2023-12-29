@@ -33,6 +33,7 @@ exports.addJob = async (req, res) => {
 exports.getJobBySlug = async (req, res) => {
   try {
     const jobSlug = req.params.jobSlug;
+
     const job = await Job.findOne({ slug: jobSlug }).populate({
       path: "companyDetails",
       select: "-__v",
@@ -42,25 +43,39 @@ exports.getJobBySlug = async (req, res) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    const { success, data } = await ratingsUtil.getRatings("job", job._id);
+    // Array to store promises
+    const promises = [];
 
-    if (!success) {
-      return res.status(404).json({ success: false, message: data });
-    }
+    // Fetch ratings using utility function
+    promises.push(
+      (async () => {
+        const { success, data } = await ratingsUtil.getRatings("job", job._id);
 
-    const jobWithRatingsData = {
-      ...job.toObject(),
-      ratings: data.ratings,
-      overallAvgRating: data.overallAvgRating,
-      parametersAvgRatings: data.parametersAvgRatings,
-    };
+        if (!success) {
+          return res.status(404).json({ success: false, message: data });
+        }
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        job: jobWithRatingsData,
-      },
-    });
+        const jobWithRatingsData = {
+          ...job.toObject(),
+          ratings: data.ratings,
+          overallAvgRating: data.overallAvgRating,
+          parametersAvgRatings: data.parametersAvgRatings,
+        };
+
+        return {
+          success: true,
+          data: {
+            job: jobWithRatingsData,
+          },
+        };
+      })()
+    );
+
+    // Use Promise.all to wait for all promises to resolve
+    const results = await Promise.all(promises);
+
+    // Return the response
+    return res.status(200).json(results[0]);
   } catch (error) {
     console.error("Error:", error);
     return res

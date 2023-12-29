@@ -27,7 +27,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"admin@gmail.com\",\r\n    \"password\": \"12345\"\r\n}",
+							"raw": "{\r\n    \"email\": \"new@gmail.com\",\r\n    \"password\": \"12345678910\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,6 +125,34 @@
 							],
 							"path": [
 								"saved-jobs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user ratings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/users/rated-jobs-companies",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"users",
+								"rated-jobs-companies"
 							]
 						}
 					},
@@ -367,6 +395,149 @@
 								"companies",
 								"kunde-bauch",
 								"ratings"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratings",
+			"item": [
+				{
+					"name": "Add company rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ratingText\": \"Great company\",\r\n    \"companyId\": \"658e20ec66d955dd234065eb\",\r\n    \"parametersRating\": {\r\n        \"reputation\": 4,\r\n        \"companyCulture\": 5,\r\n        \"opportunitiesForAdvancement\": 3,\r\n        \"workLifeBalance\": 4,\r\n        \"employeeBenefits\": 4,\r\n        \"leadershipAndManagement\": 4,\r\n        \"innovationAndTechnologyAdoption\": 3,\r\n        \"diversityAndInclusion\": 5,\r\n        \"corporateSocialResponsibility\": 4,\r\n        \"financialStability\": 5\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/ratings",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ratings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add job rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ratingText\": \"Great Job\",\r\n    \"jobId\": \"658e228025ad438860e81ab5\",\r\n    \"parametersRating\": {\r\n        \"compensation\": 1,\r\n        \"workLifeBalance\": 1,\r\n        \"jobSecurity\": 1,\r\n        \"opportunitiesForGrowth\": 1,\r\n        \"companyCulture\": 1,\r\n        \"jobSatisfaction\": 1,\r\n        \"workload\": 1,\r\n        \"benefits\": 1,\r\n        \"flexibility\": 1\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/ratings",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ratings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get company ratings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/ratings?companyId=658be53cae3bff341cedcb88",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ratings"
+							],
+							"query": [
+								{
+									"key": "companyId",
+									"value": "658be53cae3bff341cedcb88"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get job ratings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/ratings?jobId=658be676c31469cd36718bb5",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ratings"
+							],
+							"query": [
+								{
+									"key": "jobId",
+									"value": "658be676c31469cd36718bb5"
+								}
 							]
 						}
 					},

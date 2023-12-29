@@ -277,7 +277,6 @@ exports.getUserRatingForJob = async (req, res) => {
 
   try {
     const job = await Job.findOne({ slug: jobSlug }).populate("companyDetails");
-    console.log("***", job);
 
     if (!job) {
       return res.status(404).json({
@@ -293,15 +292,21 @@ exports.getUserRatingForJob = async (req, res) => {
       .select("parametersRating jobId ratingAverage ratingText")
       .lean();
 
-    if (!userRatingForJob) {
-      return res.status(404).json({
-        success: false,
-        error: "User rating not found for the specified job.",
-      });
-    }
-
     const jobTitle = job.title;
     const companyTitle = job.companyDetails.name;
+    const jobId = job._id;
+
+    if (!userRatingForJob) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          jobTitle,
+          companyTitle,
+          jobId,
+          message: "User rating not found for the specified job.",
+        },
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -309,6 +314,7 @@ exports.getUserRatingForJob = async (req, res) => {
         userRatingForJob,
         jobTitle,
         companyTitle,
+        jobId,
       },
     });
   } catch (error) {
@@ -338,15 +344,21 @@ exports.getUserRatingForCompany = async (req, res) => {
       .select("parametersRating companyId ratingAverage ratingText")
       .lean();
 
-    if (!userRatingForCompany) {
-      return res.status(404).json({
-        success: false,
-        error: "User rating not found for the specified company.",
-      });
-    }
-
     const companyTitle = company.name;
     const companyLocation = company.location;
+    const companyId = company._id;
+
+    if (!userRatingForCompany) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          companyTitle,
+          companyLocation,
+          companyId,
+          message: "User rating not found for the specified company.",
+        },
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -354,6 +366,7 @@ exports.getUserRatingForCompany = async (req, res) => {
         userRatingForCompany,
         companyTitle,
         companyLocation,
+        companyId,
       },
     });
   } catch (error) {
