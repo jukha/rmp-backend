@@ -10,6 +10,5 @@ router.get("/company/:companyId/:userId?", jobController.getJobsByCompany);
 
 router.use(jwtUtility.verifyAuthToken);
 router.post("/", jobController.addJob);
-router.post("/:jobSlug/ratings", jobController.addJobRating);
 
 module.exports = router;

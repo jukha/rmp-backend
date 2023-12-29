@@ -9,6 +9,5 @@ router.get("/:companySlug", companyController.getCompanyBySlug);
 
 router.use(jwtUtility.verifyAuthToken);
 router.post("/", companyController.addCompany);
-router.post("/:companySlug/ratings", companyController.addRating);
 
 module.exports = router;

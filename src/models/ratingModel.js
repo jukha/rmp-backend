@@ -1,29 +1,49 @@
 const mongoose = require("mongoose");
 
-const ratingSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const ratingSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Job",
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    ratingText: String,
+    parametersRating: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+    ratingAverage: { type: Number, default: 0 },
   },
-  companyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Company",
-  },
-  jobId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Job",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  textContent: String,
-  parametersRating: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-  },
-  ratingAverage: { type: Number, default: 0 },
+  {
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
+);
+
+ratingSchema.virtual("user", {
+  ref: "User",
+  localField: "userId",
+  foreignField: "_id",
+  justOne: true,
+});
+
+ratingSchema.virtual("company", {
+  ref: "Company",
+  localField: "companyId",
+  foreignField: "_id",
+  justOne: true,
 });
 
 ratingSchema.pre("save", async function (next) {
