@@ -1,4 +1,5 @@
 const SavedJob = require("../models/SavedJobModel");
+const APIFeatures = require("../utils/apiFeatures");
 const jobSummaryUtil = require("../utils/getRatingsByType");
 
 exports.saveJob = async (req, res) => {
@@ -34,9 +35,16 @@ exports.saveJob = async (req, res) => {
 exports.getSavedJobsByUser = async (req, res) => {
   try {
     const userId = req.user._id;
-    const savedJobs = await SavedJob.find({ user: userId }).populate("job");
 
-    // Use Promise.all to parallelize the execution of getJobRatingsSummary
+    const features = new APIFeatures(
+      SavedJob.find({ user: userId }).populate("job"),
+      req.query
+    ).paginate();
+
+    await features.getTotalRecords();
+    const savedJobs = await features.query;
+    const paginationInfo = features.getPaginationInfo();
+
     const savedJobsWithSummary = await Promise.all(
       savedJobs.map(async (savedJob) => {
         const ratingSummary = await jobSummaryUtil.getJobRatingsSummary(
@@ -52,6 +60,7 @@ exports.getSavedJobsByUser = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: savedJobsWithSummary,
+      pagination: paginationInfo,
       message: "Saved jobs retrieved successfully",
     });
   } catch (error) {
@@ -62,4 +71,3 @@ exports.getSavedJobsByUser = async (req, res) => {
     });
   }
 };
-

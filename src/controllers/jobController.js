@@ -2,6 +2,7 @@ const Job = require("../models/jobModel");
 const Company = require("../models/companyModel");
 const SavedJob = require("../models/SavedJobModel");
 const ratingsUtil = require("../utils/getRatingsByType");
+const APIFeatures = require("../utils/apiFeatures");
 
 exports.addJob = async (req, res) => {
   try {
@@ -125,21 +126,41 @@ exports.searchJobs = async (req, res) => {
 exports.getJobsByCompany = async (req, res) => {
   try {
     const companyId = req.params.companyId;
-    const userId = req.params.userId; // Assuming userId is passed as a route parameter
+
+    console.log("compnayId", companyId);
+
+    const userId = req.params.userId;
 
     const company = await Company.findById(companyId);
 
-    const companyName = company ? company.name : null;
+    const companyName = company.name;
 
     // Fetch jobs for the company
-    const jobs = await Job.find({ company: companyId });
+    // const jobs = await Job.find({ company: companyId });
 
-    if (!userId) {
-      // If userId is not provided, return jobs without save status
-      return res.status(200).json({ success: true, data: jobs, companyName });
-    }
+    const features = new APIFeatures(
+      Job.find({ company: companyId }),
+      req.query
+    ).paginate();
+
+    await features.getTotalRecords();
+
+    const jobs = await features.query;
+
+    const paginationInfo = features.getPaginationInfo();
+
+    // if (!userId) {
+    //   // If userId is not provided, return jobs without save status
+    //   return res.status(200).json({
+    //     success: true,
+    //     data: jobs,
+    //     pagination: paginationInfo,
+    //     companyName,
+    //   });
+    // }
 
     // Fetch saved jobs for the user
+
     const savedJobs = await SavedJob.find({
       user: userId,
       job: { $in: jobs.map((job) => job._id) },
@@ -179,6 +200,7 @@ exports.getJobsByCompany = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: jobsWithSaveStatus,
+      pagination: paginationInfo,
       companyName,
     });
   } catch (error) {
