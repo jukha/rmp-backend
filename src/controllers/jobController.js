@@ -50,7 +50,11 @@ exports.getJobBySlug = async (req, res) => {
     // Fetch ratings using utility function
     promises.push(
       (async () => {
-        const { success, data } = await ratingsUtil.getRatings("job", job._id);
+        const { success, data } = await ratingsUtil.getRatings(
+          "job",
+          job._id,
+          req.query
+        );
 
         if (!success) {
           return res.status(404).json({ success: false, message: data });

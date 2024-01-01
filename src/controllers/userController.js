@@ -236,7 +236,6 @@ exports.updateUser = async (req, res) => {
 
 exports.getRatedJobsAndCompanies = async (req, res) => {
   const { _id: userId } = req.user;
-  const { page = 1, limit = 10 } = req.query;
 
   try {
     // Step 1: Fetch rated jobs

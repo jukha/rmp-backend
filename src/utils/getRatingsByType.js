@@ -1,22 +1,102 @@
 const Rating = require("../models/ratingModel");
+const APIFeatures = require("./apiFeatures");
 
-exports.getRatings = async (type, id) => {
+// exports.getRatings = async (type, id) => {
+//   try {
+//     let ratings;
+
+//     // Get ratings for a specific job
+//     if (type === "job") {
+//       ratings = await Rating.find({ jobId: id }).populate({
+//         path: "user",
+//       });
+//     }
+
+//     // Get ratings for a specific company
+//     if (type === "company") {
+//       ratings = await Rating.find({ companyId: id }).populate({
+//         path: "user",
+//       });
+//     }
+
+//     if (!ratings || ratings.length === 0) {
+//       // If no ratings are found, return default values
+//       return {
+//         success: true,
+//         data: {
+//           ratings: [],
+//           overallAvgRating: 0,
+//           parametersAvgRatings: {},
+//         },
+//       };
+//     }
+
+//     // Calculate on-the-fly averages
+//     const totalRatings = ratings.length;
+
+//     const overallAvgRating =
+//       ratings.reduce((sum, rating) => sum + rating.ratingAverage, 0) /
+//       totalRatings;
+
+//     const parametersAvgRatings = {};
+//     const ratingParameterKeys = Object.keys(ratings[0].parametersRating);
+
+//     for (const parameter of ratingParameterKeys) {
+//       const parameterSum = ratings.reduce(
+//         (sum, rating) => sum + rating.parametersRating[parameter],
+//         0
+//       );
+//       parametersAvgRatings[parameter] = Number(
+//         (parameterSum / totalRatings).toFixed(1)
+//       );
+//     }
+
+//     return {
+//       success: true,
+//       data: {
+//         ratings,
+//         overallAvgRating,
+//         parametersAvgRatings,
+//       },
+//     };
+//   } catch (error) {
+//     console.error("Error fetching ratings:", error.message);
+//     throw new Error("Internal Server Error");
+//   }
+// };
+
+exports.getRatings = async (type, id, queryObj) => {
   try {
-    let ratings;
+    // let ratings;
+    let features;
 
     // Get ratings for a specific job
     if (type === "job") {
-      ratings = await Rating.find({ jobId: id }).populate({
-        path: "user",
-      });
+      features = new APIFeatures(
+        Rating.find({ jobId: id }).populate("user"),
+        queryObj
+      ).paginate();
+      // ratings = await Rating.find({ jobId: id }).populate({
+      //   path: "user",
+      // });
     }
 
     // Get ratings for a specific company
     if (type === "company") {
-      ratings = await Rating.find({ companyId: id }).populate({
-        path: "user",
-      });
+      features = new APIFeatures(
+        Rating.find({ companyId: id }).populate("user"),
+        queryObj
+      ).paginate();
+      // ratings = await Rating.find({ companyId: id }).populate({
+      //   path: "user",
+      // });
     }
+
+    await features.getTotalRecords();
+    const ratings = await features.query;
+    const pagination = features.getPaginationInfo();
+
+    console.log("pagination", pagination);
 
     if (!ratings || ratings.length === 0) {
       // If no ratings are found, return default values
@@ -26,6 +106,7 @@ exports.getRatings = async (type, id) => {
           ratings: [],
           overallAvgRating: 0,
           parametersAvgRatings: {},
+          pagination,
         },
       };
     }
@@ -33,9 +114,12 @@ exports.getRatings = async (type, id) => {
     // Calculate on-the-fly averages
     const totalRatings = ratings.length;
 
-    const overallAvgRating =
-      ratings.reduce((sum, rating) => sum + rating.ratingAverage, 0) /
-      totalRatings;
+    const overallAvgRating = Number(
+      (
+        ratings.reduce((sum, rating) => sum + rating.ratingAverage, 0) /
+        totalRatings
+      ).toFixed(1)
+    );
 
     const parametersAvgRatings = {};
     const ratingParameterKeys = Object.keys(ratings[0].parametersRating);
@@ -53,7 +137,10 @@ exports.getRatings = async (type, id) => {
     return {
       success: true,
       data: {
-        ratings,
+        ratings: {
+          data: ratings,
+          pagination,
+        },
         overallAvgRating,
         parametersAvgRatings,
       },

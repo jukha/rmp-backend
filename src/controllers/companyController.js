@@ -47,7 +47,8 @@ exports.getCompanyBySlug = async (req, res) => {
       (async () => {
         const { success, data } = await ratingsUtil.getRatings(
           "company",
-          company._id
+          company._id,
+          req.query
         );
 
         if (!success) {
