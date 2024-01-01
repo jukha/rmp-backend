@@ -20,6 +20,18 @@ const ratingSchema = new mongoose.Schema(
       default: Date.now,
     },
     ratingText: String,
+    thumbsUp: {
+      type: Number,
+      default: 0,
+    },
+    thumbsDown: {
+      type: Number,
+      default: 0,
+    },
+    isReported: {
+      type: Boolean,
+      default: false,
+    },
     parametersRating: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
