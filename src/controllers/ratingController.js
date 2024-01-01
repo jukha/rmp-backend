@@ -1,6 +1,7 @@
 const Rating = require("../models/ratingModel");
 const Job = require("../models/jobModel");
 const Company = require("../models/companyModel");
+const UserRatingAction = require("../models/userRatingActionModel");
 
 const COMPANY_RATING_PARAMETERS = [
   "reputation",
@@ -195,13 +196,68 @@ exports.updateRatingFeedback = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    // Update the feedback based on the feedbackType
-    if (feedbackType === "thumbsUp") {
-      rating.thumbsUp += 1;
-    } else if (feedbackType === "thumbsDown") {
-      rating.thumbsDown += 1;
-    } else if (feedbackType === "isReported" && !rating.isReported) {
-      rating.isReported = !rating.isReported;
+    let userRatingAction = await UserRatingAction.findOne({
+      userId,
+      ratingId,
+    });
+
+    // If UserRatingAction doesn't exist
+    if (!userRatingAction) {
+      userRatingAction = new UserRatingAction({
+        userId,
+        ratingId,
+        actionType: feedbackType,
+      });
+
+      await userRatingAction.save();
+
+      if (feedbackType === "isReported" && !rating.isReported) {
+        rating.isReported = !rating.isReported;
+      } else if (rating.isReported) {
+        return res.status(200).json({
+          success: false,
+          message: "Someone has already flagged this and it is under review.",
+        });
+      } else {
+        // Update the count of that specific action type in the corresponding rating
+        rating[feedbackType] += 1;
+      }
+
+      // Save the updated rating
+      const updatedRating = await rating.save();
+
+      return res.status(200).json({
+        success: true,
+        data: updatedRating,
+        message: `${feedbackType} updated successfully`,
+      });
+    } else {
+      // If UserRatingAction exists, check if the user has already performed a different action
+      if (userRatingAction.actionType !== feedbackType) {
+        // If the user changes the action from thumbsUp to thumbsDown or vice versa
+        if (
+          (userRatingAction.actionType === "thumbsUp" &&
+            feedbackType === "thumbsDown") ||
+          (userRatingAction.actionType === "thumbsDown" &&
+            feedbackType === "thumbsUp")
+        ) {
+          // Update the counts accordingly
+          rating.thumbsUp += feedbackType === "thumbsUp" ? 1 : -1;
+          rating.thumbsDown += feedbackType === "thumbsDown" ? 1 : -1;
+        } else {
+          // Update UserRatingAction with the new action type
+          userRatingAction.actionType = feedbackType;
+          await userRatingAction.save();
+        }
+      } else {
+        // If UserRatingAction exists and the user performs the same action, return an error
+        return res.status(400).json({
+          success: false,
+          message: `You have already ${
+            feedbackType === "isReported" ? "flagged" : feedbackType
+          } this rating.`,
+        });
+      }
     }
 
     // Save the updated rating
