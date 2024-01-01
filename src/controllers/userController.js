@@ -8,6 +8,7 @@ const User = require("../models/userModel");
 const Job = require("../models/jobModel");
 const Company = require("../models/companyModel");
 const Rating = require("../models/ratingModel");
+const APIFeatures = require("../utils/apiFeatures");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -235,36 +236,58 @@ exports.updateUser = async (req, res) => {
 
 exports.getRatedJobsAndCompanies = async (req, res) => {
   const { _id: userId } = req.user;
+  const { page = 1, limit = 10 } = req.query;
 
   try {
-    const [allRatings] = await Promise.all([
+    // Step 1: Fetch rated jobs
+    const featuresJobs = new APIFeatures(
       Rating.find({
         userId,
-        $or: [{ jobId: { $exists: true } }, { companyId: { $exists: true } }],
+        jobId: { $exists: true },
+        companyId: null,
       })
         .populate({ path: "job", select: "title slug" })
-        .populate({ path: "company", select: "name slug" })
-        .select("jobId companyId parametersRating ratingAverage ratingText")
+        .select("jobId parametersRating ratingAverage ratingText")
         .lean(),
-    ]);
+      req.query
+    ).paginate();
 
-    const ratedJobs = allRatings.filter((rating) => rating.jobId);
-    const ratedCompanies = allRatings.filter((rating) => rating.companyId);
+    await featuresJobs.getTotalRecords();
+    const ratedJobs = await featuresJobs.query;
+    const paginationInfoJobs = featuresJobs.getPaginationInfo();
 
     // Remove the excluded fields
     ratedJobs.forEach((job) => {
       delete job.jobId;
-      delete job.companyId;
-      delete job.company;
     });
 
+    // Step 2: Fetch rated companies
+    const featuresCompanies = new APIFeatures(
+      Rating.find({
+        userId,
+        companyId: { $exists: true },
+        jobId: null,
+      })
+        .populate({ path: "company", select: "name slug" })
+        .select("companyId parametersRating ratingAverage ratingText")
+        .lean(),
+      req.query
+    ).paginate();
+
+    await featuresCompanies.getTotalRecords();
+    const ratedCompanies = await featuresCompanies.query;
+    const paginationInfoCompanies = featuresCompanies.getPaginationInfo();
+
+    // Remove the excluded fields
     ratedCompanies.forEach((company) => {
       delete company.companyId;
-      delete company.jobId;
-      delete company.job;
     });
-
-    return res.status(200).json({ ratedJobs, ratedCompanies });
+    return res.status(200).json({
+      ratedJobs,
+      ratedCompanies,
+      paginationJobs: paginationInfoJobs,
+      paginationCompanies: paginationInfoCompanies,
+    });
   } catch (error) {
     console.error("Error fetching rated jobs and companies:", error.message);
     return res.status(500).json({ error: "Internal Server Error" });
