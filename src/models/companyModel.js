@@ -15,6 +15,11 @@ const companySchema = new mongoose.Schema({
     required: true,
   },
   slug: String,
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 companySchema.index({ name: "text", description: "text" });

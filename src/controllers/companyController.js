@@ -4,11 +4,25 @@ const ratingsUtil = require("../utils/getRatingsByType");
 exports.addCompany = async (req, res) => {
   try {
     const { name, description, location } = req.body;
+    const createdBy = req.user._id;
+
+    // Perform case-insensitive search for a company with the same name
+    const existingCompany = await Company.findOne({
+      name: { $regex: new RegExp(name, "i") },
+    });
+
+    if (existingCompany) {
+      return res.status(400).json({
+        success: false,
+        message: "Company with a similar name already exists",
+      });
+    }
 
     const newCompany = new Company({
       name: name,
       description: description,
       location: location,
+      createdBy: createdBy,
       ratings: [],
     });
 

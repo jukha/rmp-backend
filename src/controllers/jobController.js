@@ -7,12 +7,26 @@ const APIFeatures = require("../utils/apiFeatures");
 exports.addJob = async (req, res) => {
   try {
     const { title, description, location, company } = req.body;
+    const createdBy = req.user._id;
+
+    // Perform case-insensitive search for a job with the same title
+    const existingJob = await Job.findOne({
+      title: { $regex: new RegExp(title, "i") },
+    });
+
+    if (existingJob) {
+      return res.status(400).json({
+        success: false,
+        message: "Job with a similar title already exists",
+      });
+    }
 
     const newJob = new Job({
       title: title,
       description: description,
       location: location,
       company: company,
+      createdBy: createdBy,
       ratings: [],
     });
 

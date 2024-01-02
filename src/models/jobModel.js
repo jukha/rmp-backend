@@ -18,6 +18,11 @@ const jobSchema = new mongoose.Schema(
     },
 
     slug: String,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     toJSON: { virtuals: true },
