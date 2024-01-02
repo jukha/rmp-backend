@@ -6,6 +6,14 @@ exports.addCompany = async (req, res) => {
     const { name, description, location } = req.body;
     const createdBy = req.user._id;
 
+    // Check if required fields are present
+    if (!name || !description || !location) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, description, and location are required fields",
+      });
+    }
+
     // Perform case-insensitive search for a company with the same name
     const existingCompany = await Company.findOne({
       name: { $regex: new RegExp(name, "i") },

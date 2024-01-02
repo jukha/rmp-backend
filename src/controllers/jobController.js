@@ -9,6 +9,14 @@ exports.addJob = async (req, res) => {
     const { title, description, location, company } = req.body;
     const createdBy = req.user._id;
 
+    // Check if required fields are present
+    if (!title || !description || !location || !company) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, description, company and location are required fields",
+      });
+    }
+
     // Perform case-insensitive search for a job with the same title
     const existingJob = await Job.findOne({
       title: { $regex: new RegExp(title, "i") },
