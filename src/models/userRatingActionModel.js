@@ -8,11 +8,15 @@ const userRatingActionSchema = new mongoose.Schema({
   },
   actionType: {
     type: String,
-    enum: ["thumbsUp", "thumbsDown", "isReported"],
+    default: "",
   },
   ratingId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Rating",
+  },
+  isReported: {
+    type: Boolean,
+    default: false,
   },
 });
 

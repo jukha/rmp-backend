@@ -175,12 +175,12 @@ exports.getRatings = async (req, res) => {
 };
 
 exports.updateRatingFeedback = async (req, res) => {
-  const { ratingId, feedbackType } = req.body;
+  const { ratingId, feedbackType, isReported } = req.body;
   const userId = req.user._id;
 
   try {
     // Validate if feedbackType is valid
-    if (!["thumbsUp", "thumbsDown", "isReported"].includes(feedbackType)) {
+    if (feedbackType && !["thumbsUp", "thumbsDown"].includes(feedbackType)) {
       return res.status(400).json({ error: "Invalid feedbackType" });
     }
 
@@ -193,7 +193,10 @@ exports.updateRatingFeedback = async (req, res) => {
 
     // Check if the user is the owner of the rating
     if (rating.userId.toString() === userId.toString()) {
-      return res.status(403).json({ error: "Permission denied" });
+      return res.status(403).json({
+        success: false,
+        message: "Cannot interact with your own rating.",
+      });
     }
 
     let userRatingAction = await UserRatingAction.findOne({
@@ -206,68 +209,97 @@ exports.updateRatingFeedback = async (req, res) => {
       userRatingAction = new UserRatingAction({
         userId,
         ratingId,
-        actionType: feedbackType,
+        actionType: feedbackType || null, // Initialize actionType consistently
       });
 
-      await userRatingAction.save();
-
-      if (feedbackType === "isReported" && !rating.isReported) {
-        rating.isReported = !rating.isReported;
-      } else if (rating.isReported) {
+      if (isReported && !rating.isReported) {
+        rating.isReported = true;
+        userRatingAction.isReported = true;
+      } else if (isReported && rating.isReported) {
         return res.status(200).json({
           success: false,
           message: "Someone has already flagged this and it is under review.",
         });
-      } else {
-        // Update the count of that specific action type in the corresponding rating
-        rating[feedbackType] += 1;
+      } else if (feedbackType) {
+        // Check if the user is changing the action from thumbsUp to thumbsDown or vice versa
+        const oppositeFeedbackType =
+          feedbackType === "thumbsUp" ? "thumbsDown" : "thumbsUp";
+        if (userRatingAction[oppositeFeedbackType]) {
+          // The user is changing from thumbsUp to thumbsDown or vice versa
+          userRatingAction[oppositeFeedbackType] = false;
+          rating[oppositeFeedbackType] -= 1;
+          userRatingAction[feedbackType] = true;
+          rating[feedbackType] += 1;
+        } else {
+          // Update the corresponding action type in the UserRatingAction model
+          userRatingAction[feedbackType] = true;
+          // Update the count of that specific action type in the corresponding rating
+          rating[feedbackType] += 1;
+        }
       }
 
-      // Save the updated rating
+      // Save the updated models
+      await userRatingAction.save();
       const updatedRating = await rating.save();
 
       return res.status(200).json({
         success: true,
         data: updatedRating,
-        message: `${feedbackType} updated successfully`,
+        message: `${feedbackType || "isReported"} updated successfully`,
       });
     } else {
       // If UserRatingAction exists, check if the user has already performed a different action
-      if (userRatingAction.actionType !== feedbackType) {
-        // If the user changes the action from thumbsUp to thumbsDown or vice versa
-        if (
-          (userRatingAction.actionType === "thumbsUp" &&
-            feedbackType === "thumbsDown") ||
-          (userRatingAction.actionType === "thumbsDown" &&
-            feedbackType === "thumbsUp")
-        ) {
-          // Update the counts accordingly
-          rating.thumbsUp += feedbackType === "thumbsUp" ? 1 : -1;
-          rating.thumbsDown += feedbackType === "thumbsDown" ? 1 : -1;
+      if (feedbackType && userRatingAction.actionType !== feedbackType) {
+        // Check if the user is changing the action from thumbsUp to thumbsDown or vice versa
+        const oppositeFeedbackType =
+          feedbackType === "thumbsUp" ? "thumbsDown" : "thumbsUp";
+        if (userRatingAction[oppositeFeedbackType]) {
+          // The user is changing from thumbsUp to thumbsDown or vice versa
+          userRatingAction[oppositeFeedbackType] = false;
+          rating[oppositeFeedbackType] -= 1;
+          userRatingAction[feedbackType] = true;
+          rating[feedbackType] += 1;
         } else {
+          // Update the counts accordingly
+          rating[userRatingAction.actionType] -= 1;
+          rating[feedbackType] += 1;
           // Update UserRatingAction with the new action type
           userRatingAction.actionType = feedbackType;
+        }
+        await userRatingAction.save();
+        const updatedRating = await rating.save();
+        return res.status(200).json({
+          success: true,
+          data: updatedRating,
+          message: "Updated successfully",
+        });
+      } else if (isReported) {
+        if (userRatingAction.isReported || rating.isReported) {
+          return res.status(400).json({
+            success: false,
+            message: "Already flagged",
+          });
+        } else {
+          userRatingAction.isReported = true;
+          rating.isReported = true;
           await userRatingAction.save();
+          const updatedRating = await rating.save();
+          return res.status(200).json({
+            success: true,
+            data: updatedRating,
+            message: "Updated successfully",
+          });
         }
       } else {
         // If UserRatingAction exists and the user performs the same action, return an error
         return res.status(400).json({
           success: false,
           message: `You have already ${
-            feedbackType === "isReported" ? "flagged" : feedbackType
+            feedbackType || "isReported"
           } this rating.`,
         });
       }
     }
-
-    // Save the updated rating
-    const updatedRating = await rating.save();
-
-    return res.status(200).json({
-      success: true,
-      data: updatedRating,
-      message: `${feedbackType} updated successfully`,
-    });
   } catch (error) {
     console.error("Error updating rating feedback:", error.message);
     return res.status(500).json({ error: "Internal Server Error" });
