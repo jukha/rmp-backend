@@ -3,6 +3,7 @@ const Company = require("../models/companyModel");
 const SavedJob = require("../models/SavedJobModel");
 const ratingsUtil = require("../utils/getRatingsByType");
 const APIFeatures = require("../utils/apiFeatures");
+const jobSummaryUtil = require("../utils/getRatingsByType");
 
 exports.addJob = async (req, res) => {
   try {
@@ -131,16 +132,42 @@ exports.searchJobs = async (req, res) => {
   try {
     const keyword = req.query.q;
 
+    let features;
+
     if (!keyword) {
-      return res.status(400).json({
-        success: false,
-        message: "Keyword is required for searching jobs",
-      });
+      features = new APIFeatures(
+        Job.find().populate("company"),
+        req.query
+      ).paginate();
+    } else {
+      features = new APIFeatures(
+        Job.find({ $text: { $search: keyword } }).populate("company"),
+        req.query
+      ).paginate();
     }
 
-    const jobs = await Job.find({ $text: { $search: keyword } });
+    await features.getTotalRecords();
+    const jobs = await features.query;
+    const paginationInfo = features.getPaginationInfo();
 
-    return res.status(200).json({ success: true, data: jobs });
+    const jobsWithRating = await Promise.all(
+      jobs.map(async (ratedJob) => {
+        const ratingSummary = await jobSummaryUtil.getJobRatingsSummary(
+          ratedJob._id
+        );
+        return {
+          ...ratedJob.toObject(),
+          ratingSummary,
+        };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: jobsWithRating,
+      pagination: paginationInfo,
+      message: "Jobs retrieved successfully against the query",
+    });
   } catch (error) {
     console.error("Error:", error);
     return res
