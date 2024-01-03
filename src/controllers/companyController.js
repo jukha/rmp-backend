@@ -1,5 +1,7 @@
 const Company = require("../models/companyModel");
+const APIFeatures = require("../utils/apiFeatures");
 const ratingsUtil = require("../utils/getRatingsByType");
+const companySummaryUtil = require("../utils/getRatingsByType");
 
 exports.addCompany = async (req, res) => {
   try {
@@ -110,16 +112,43 @@ exports.searchCompanies = async (req, res) => {
   try {
     const keyword = req.query.q;
 
+    let features;
+
     if (!keyword) {
-      return res.status(400).json({
-        success: false,
-        message: "Keyword is required for searching companies",
-      });
+      features = new APIFeatures(Company.find(), req.query).paginate();
+    } else {
+      features = new APIFeatures(
+        // Company.find({ $text: { $search: keyword } }),
+        Company.find({
+          name: { $regex: keyword, $options: "i" },
+        }),
+        req.query
+      ).paginate();
     }
 
-    const companies = await Company.find({ $text: { $search: keyword } });
+    await features.getTotalRecords();
+    const companies = await features.query;
+    const paginationInfo = features.getPaginationInfo();
 
-    return res.status(200).json({ success: true, data: companies });
+    const companiesWithRating = await Promise.all(
+      companies.map(async (company) => {
+        const ratingSummary = await ratingsUtil.getRatingsSummary(
+          "company",
+          company._id
+        );
+        return {
+          ...company.toObject(),
+          ratingSummary,
+        };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: companiesWithRating,
+      pagination: paginationInfo,
+      message: "Companies retrieved successfully against the query",
+    });
   } catch (error) {
     console.error("Error:", error);
     return res

@@ -3,7 +3,6 @@ const Company = require("../models/companyModel");
 const SavedJob = require("../models/SavedJobModel");
 const ratingsUtil = require("../utils/getRatingsByType");
 const APIFeatures = require("../utils/apiFeatures");
-const jobSummaryUtil = require("../utils/getRatingsByType");
 
 exports.addJob = async (req, res) => {
   try {
@@ -141,7 +140,10 @@ exports.searchJobs = async (req, res) => {
       ).paginate();
     } else {
       features = new APIFeatures(
-        Job.find({ $text: { $search: keyword } }).populate("company"),
+        // Job.find({ $text: { $search: keyword } }).populate("company"),
+        Job.find({
+          title: { $regex: keyword, $options: "i" },
+        }),
         req.query
       ).paginate();
     }
@@ -150,13 +152,16 @@ exports.searchJobs = async (req, res) => {
     const jobs = await features.query;
     const paginationInfo = features.getPaginationInfo();
 
+    console.log("jobs", jobs);
+
     const jobsWithRating = await Promise.all(
-      jobs.map(async (ratedJob) => {
-        const ratingSummary = await jobSummaryUtil.getJobRatingsSummary(
-          ratedJob._id
+      jobs.map(async (job) => {
+        const ratingSummary = await ratingsUtil.getRatingsSummary(
+          "job",
+          job._id
         );
         return {
-          ...ratedJob.toObject(),
+          ...job.toObject(),
           ratingSummary,
         };
       })
@@ -202,16 +207,6 @@ exports.getJobsByCompany = async (req, res) => {
 
     const paginationInfo = features.getPaginationInfo();
 
-    // if (!userId) {
-    //   // If userId is not provided, return jobs without save status
-    //   return res.status(200).json({
-    //     success: true,
-    //     data: jobs,
-    //     pagination: paginationInfo,
-    //     companyName,
-    //   });
-    // }
-
     // Fetch saved jobs for the user
 
     const savedJobs = await SavedJob.find({
@@ -232,7 +227,8 @@ exports.getJobsByCompany = async (req, res) => {
       // Add each promise to the array
       jobPromises.push(
         (async () => {
-          const jobRatingSummary = await ratingsUtil.getJobRatingsSummary(
+          const jobRatingSummary = await ratingsUtil.getRatingsSummary(
+            "job",
             job._id
           );
 

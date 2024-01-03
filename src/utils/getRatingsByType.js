@@ -151,9 +151,17 @@ exports.getRatings = async (type, id, queryObj) => {
   }
 };
 
-exports.getJobRatingsSummary = async (jobId) => {
+exports.getRatingsSummary = async (type, id) => {
   try {
-    const ratings = await Rating.find({ jobId });
+    let ratings;
+
+    if (type === "job") {
+      ratings = await Rating.find({ jobId: id });
+    }
+
+    if (type === "company") {
+      ratings = await Rating.find({ companyId: id });
+    }
 
     if (!ratings || ratings.length === 0) {
       return {
@@ -181,7 +189,7 @@ exports.getJobRatingsSummary = async (jobId) => {
       },
     };
   } catch (error) {
-    console.error("Error fetching job ratings summary:", error.message);
+    console.error("Error fetching company ratings summary:", error.message);
     throw new Error("Internal Server Error");
   }
 };

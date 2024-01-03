@@ -47,7 +47,8 @@ exports.getSavedJobsByUser = async (req, res) => {
 
     const savedJobsWithSummary = await Promise.all(
       savedJobs.map(async (savedJob) => {
-        const ratingSummary = await jobSummaryUtil.getJobRatingsSummary(
+        const ratingSummary = await jobSummaryUtil.getRatingsSummary(
+          "job",
           savedJob.job._id
         );
         return {
