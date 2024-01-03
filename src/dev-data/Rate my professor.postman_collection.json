@@ -27,7 +27,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"new@gmail.com\",\r\n    \"password\": \"12345678910\"\r\n}",
+							"raw": "{\r\n    \"email\": \"brave@gmail.com\",\r\n    \"password\": \"123456789\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -54,7 +54,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"admin@gmail.com\",\r\n    \"firstName\": \"Muhammad\",\r\n    \"lastName\": \"Junaid\",\r\n    \"password\": \"12345\"\r\n}",
+							"raw": "{\r\n    \"email\": \"user3@gmail.com\",\r\n    \"firstName\": \"user\",\r\n    \"lastName\": \"three\",\r\n    \"password\": \"123456789\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -119,12 +119,22 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/saved-jobs",
+							"raw": "{{url}}/saved-jobs?page=1&limit=3",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"saved-jobs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "3"
+								}
 							]
 						}
 					},
@@ -278,6 +288,35 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get jobs of company",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/jobs/company/658e20ec66d955dd234065eb?page=100&limit=2",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jobs",
+								"company",
+								"658e20ec66d955dd234065eb"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "100"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -290,13 +329,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/companies/goodwin-nitzsche",
+							"raw": "{{url}}/companies/turner-inc",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"companies",
-								"goodwin-nitzsche"
+								"turner-inc"
 							]
 						}
 					},
@@ -343,7 +382,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"NEW Inc.\",\r\n    \"description\": \"Lorem ispum description for a company\",\r\n    \"location\": \"Silicon valley, USA\"\r\n}",
+							"raw": "{\r\n    \"name\": \"amazon\",\r\n    \"location\": \"Silicon valley, USA\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -422,7 +461,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"ratingText\": \"Great company\",\r\n    \"companyId\": \"658e20ec66d955dd234065eb\",\r\n    \"parametersRating\": {\r\n        \"reputation\": 4,\r\n        \"companyCulture\": 5,\r\n        \"opportunitiesForAdvancement\": 3,\r\n        \"workLifeBalance\": 4,\r\n        \"employeeBenefits\": 4,\r\n        \"leadershipAndManagement\": 4,\r\n        \"innovationAndTechnologyAdoption\": 3,\r\n        \"diversityAndInclusion\": 5,\r\n        \"corporateSocialResponsibility\": 4,\r\n        \"financialStability\": 5\r\n    }\r\n}",
+							"raw": "{\r\n    \"ratingText\": \"Great company\",\r\n    \"companyId\": \"658e20ec66d955dd234065eb\",\r\n    \"parametersRating\": {\r\n        \"reputation\": 4,\r\n        \"companyCulture\": 5,\r\n        \"opportunitiesForAdvancement\": 5,\r\n        \"workLifeBalance\": 4,\r\n        \"employeeBenefits\": 4,\r\n        \"leadershipAndManagement\": 4,\r\n        \"innovationAndTechnologyAdoption\": 3,\r\n        \"diversityAndInclusion\": 5,\r\n        \"corporateSocialResponsibility\": 4,\r\n        \"financialStability\": 5\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -538,6 +577,43 @@
 									"key": "jobId",
 									"value": "658be676c31469cd36718bb5"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update rating feedback",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ratingId\": \"658fd2d356d9d048d2e53d6c\",\r\n    \"feedbackType\": \"thumbsUp\" \r\n    //feedbackType can be \r\n    // 1)thumbsUp 2)thumbsDown 3)isReported\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/ratings/update-feedback",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ratings",
+								"update-feedback"
 							]
 						}
 					},
