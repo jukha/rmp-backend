@@ -94,7 +94,13 @@ exports.addRating = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding/updating rating:", error.message);
-    return res.status(500).json({ error: "Internal Server Error" });
+    if (error.name === "ValidationError") {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    console.log("outside");
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 

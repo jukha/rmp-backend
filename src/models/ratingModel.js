@@ -35,6 +35,20 @@ const ratingSchema = new mongoose.Schema(
     parametersRating: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
+      validate: [
+        {
+          validator: function (value) {
+            // Check each parameter's value to be within the range [0, 5]
+            for (const parameter in value) {
+              if (value[parameter] < 0 || value[parameter] > 5) {
+                return false;
+              }
+            }
+            return true;
+          },
+          message: "Parameter values must be between 0 and 5.",
+        },
+      ],
     },
     ratingAverage: { type: Number, default: 0 },
   },
