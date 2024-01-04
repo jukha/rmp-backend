@@ -180,8 +180,59 @@ exports.getRatings = async (req, res) => {
   }
 };
 
+exports.reportARating = async (req, res) => {
+  const { ratingId, isReported, reportingReason } = req.body;
+
+  const userId = req.user._id;
+
+  if (!ratingId || !isReported || !reportingReason) {
+    return res.status(400).json({
+      error: "ratingId, isReported, and reportingReason are required fields",
+    });
+  }
+
+  try {
+    const rating = await Rating.findById(ratingId);
+
+    if (!rating) {
+      return res.status(404).json({ error: "Rating not found" });
+    }
+
+    // Check if the user is the owner of the rating
+    if (rating.userId.toString() === userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Cannot interact with your own rating.",
+      });
+    }
+
+    if (isReported && !rating.isReported) {
+      rating.isReported = true;
+
+      rating.reportingReason = reportingReason;
+
+      rating.reportedBy = userId;
+
+      await rating.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Rating flagged successfully!",
+      });
+    } else if (isReported && rating.isReported) {
+      return res.status(400).json({
+        success: false,
+        message: "Someone has already flagged this and it is under review.",
+      });
+    }
+  } catch (error) {
+    console.error("Error Reporting rating:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 exports.updateRatingFeedback = async (req, res) => {
-  const { ratingId, feedbackType, isReported } = req.body;
+  const { ratingId, feedbackType } = req.body;
   const userId = req.user._id;
 
   try {
@@ -218,27 +269,15 @@ exports.updateRatingFeedback = async (req, res) => {
         actionType: feedbackType || null, // Initialize actionType consistently
       });
 
-      if (isReported && !rating.isReported) {
-        rating.isReported = true;
-        userRatingAction.isReported = true;
-      } else if (isReported && rating.isReported) {
-        return res.status(200).json({
-          success: false,
-          message: "Someone has already flagged this and it is under review.",
-        });
-      } else if (feedbackType) {
+      if (feedbackType) {
         // Check if the user is changing the action from thumbsUp to thumbsDown or vice versa
         const oppositeFeedbackType =
           feedbackType === "thumbsUp" ? "thumbsDown" : "thumbsUp";
         if (userRatingAction[oppositeFeedbackType]) {
           // The user is changing from thumbsUp to thumbsDown or vice versa
-          userRatingAction[oppositeFeedbackType] = false;
           rating[oppositeFeedbackType] -= 1;
-          userRatingAction[feedbackType] = true;
-          rating[feedbackType] += 1;
         } else {
           // Update the corresponding action type in the UserRatingAction model
-          userRatingAction[feedbackType] = true;
           // Update the count of that specific action type in the corresponding rating
           rating[feedbackType] += 1;
         }
@@ -251,7 +290,7 @@ exports.updateRatingFeedback = async (req, res) => {
       return res.status(200).json({
         success: true,
         data: updatedRating,
-        message: `${feedbackType || "isReported"} updated successfully`,
+        message: `${feedbackType} updated successfully`,
       });
     } else {
       // If UserRatingAction exists, check if the user has already performed a different action
@@ -261,9 +300,7 @@ exports.updateRatingFeedback = async (req, res) => {
           feedbackType === "thumbsUp" ? "thumbsDown" : "thumbsUp";
         if (userRatingAction[oppositeFeedbackType]) {
           // The user is changing from thumbsUp to thumbsDown or vice versa
-          userRatingAction[oppositeFeedbackType] = false;
           rating[oppositeFeedbackType] -= 1;
-          userRatingAction[feedbackType] = true;
           rating[feedbackType] += 1;
         } else {
           // Update the counts accordingly
@@ -279,35 +316,43 @@ exports.updateRatingFeedback = async (req, res) => {
           data: updatedRating,
           message: "Updated successfully",
         });
-      } else if (isReported) {
-        if (userRatingAction.isReported || rating.isReported) {
-          return res.status(400).json({
-            success: false,
-            message: "Already flagged",
-          });
-        } else {
-          userRatingAction.isReported = true;
-          rating.isReported = true;
-          await userRatingAction.save();
-          const updatedRating = await rating.save();
-          return res.status(200).json({
-            success: true,
-            data: updatedRating,
-            message: "Updated successfully",
-          });
-        }
       } else {
         // If UserRatingAction exists and the user performs the same action, return an error
         return res.status(400).json({
           success: false,
-          message: `You have already ${
-            feedbackType || "isReported"
-          } this rating.`,
+          message: `You have already ${feedbackType} this rating.`,
         });
       }
     }
   } catch (error) {
     console.error("Error updating rating feedback:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getRating = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(id);
+
+    const rating = await Rating.findById(id)
+      .populate("company")
+      .populate("job");
+
+    if (!rating) {
+      return res.status(404).json({
+        success: false,
+        message: "Rating not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: rating,
+    });
+  } catch (error) {
+    console.error("Error getting rating:", error.message);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

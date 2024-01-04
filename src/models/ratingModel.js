@@ -32,6 +32,11 @@ const ratingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    reportedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reportingReason: String,
     parametersRating: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
