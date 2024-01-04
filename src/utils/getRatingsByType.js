@@ -67,6 +67,13 @@ const APIFeatures = require("./apiFeatures");
 
 exports.getRatings = async (type, id, queryObj) => {
   try {
+    const RATING_VALUE_DISTRIBUTION = [
+      { name: "awful", value: 1, count: 0 },
+      { name: "ok", value: 2, count: 0 },
+      { name: "good", value: 3, count: 0 },
+      { name: "great", value: 4, count: 0 },
+      { name: "awesome", value: 5, count: 0 },
+    ];
     // let ratings;
     let features;
 
@@ -107,6 +114,7 @@ exports.getRatings = async (type, id, queryObj) => {
           overallAvgRating: 0,
           parametersAvgRatings: {},
           pagination,
+          ratingDistribution: RATING_VALUE_DISTRIBUTION,
         },
       };
     }
@@ -134,6 +142,23 @@ exports.getRatings = async (type, id, queryObj) => {
       );
     }
 
+    // Update the rating distribution based on ratingAverage
+    ratings.forEach((rating) => {
+      const { ratingAverage } = rating;
+
+      if (ratingAverage >= 1 && ratingAverage <= 1.5) {
+        RATING_VALUE_DISTRIBUTION[0].count++;
+      } else if (ratingAverage > 1.5 && ratingAverage <= 2.5) {
+        RATING_VALUE_DISTRIBUTION[1].count++;
+      } else if (ratingAverage > 2.5 && ratingAverage <= 3.5) {
+        RATING_VALUE_DISTRIBUTION[2].count++;
+      } else if (ratingAverage > 3.5 && ratingAverage <= 4.5) {
+        RATING_VALUE_DISTRIBUTION[3].count++;
+      } else if (ratingAverage > 4.5 && ratingAverage <= 5) {
+        RATING_VALUE_DISTRIBUTION[4].count++;
+      }
+    });
+
     return {
       success: true,
       data: {
@@ -143,6 +168,7 @@ exports.getRatings = async (type, id, queryObj) => {
         },
         overallAvgRating,
         parametersAvgRatings,
+        ratingDistribution: RATING_VALUE_DISTRIBUTION,
       },
     };
   } catch (error) {

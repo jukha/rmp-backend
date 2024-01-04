@@ -87,6 +87,7 @@ exports.getJobBySlug = async (req, res) => {
           ratings: data.ratings,
           overallAvgRating: data.overallAvgRating,
           parametersAvgRatings: data.parametersAvgRatings,
+          ratingDistribution: data.ratingDistribution,
         };
 
         return {
