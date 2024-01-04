@@ -7,6 +7,7 @@ router.get("/search", jobController.searchJobs);
 router.get("/job-suggestions", jobController.jobSuggestions);
 router.get("/:jobSlug", jobController.getJobBySlug);
 router.get("/company/:companyId/:userId?", jobController.getJobsByCompany);
+router.get("/similar-jobs/:jobId", jobController.getSimilarJobs);
 
 router.use(jwtUtility.verifyAuthToken);
 router.post("/", jobController.addJob);

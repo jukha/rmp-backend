@@ -259,3 +259,48 @@ exports.getJobsByCompany = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+exports.getSimilarJobs = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const originalJob = await Job.findById(jobId);
+
+    if (!originalJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const similarJobCriteria = {
+      company: originalJob.company,
+      _id: { $ne: originalJob._id },
+    };
+
+    const similarJobs = await Job.find(similarJobCriteria).limit(3);
+
+    const similarJobsPromises = [];
+
+    for (const job of similarJobs) {
+      similarJobsPromises.push(
+        (async () => {
+          const jobRatingSummary = await ratingsUtil.getRatingsSummary(
+            "job",
+            job._id
+          );
+          return {
+            ...job.toObject(),
+            overallAvgRating: jobRatingSummary.data.overallAvgRating,
+          };
+        })()
+      );
+    }
+
+    const similarJobsWithOverallAvgRatings = await Promise.all(
+      similarJobsPromises
+    );
+
+    res.json({ success: true, data: similarJobsWithOverallAvgRatings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
