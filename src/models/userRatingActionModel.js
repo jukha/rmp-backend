@@ -14,10 +14,6 @@ const userRatingActionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Rating",
   },
-  isReported: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 userRatingActionSchema.index({ userId: 1, ratingId: 1 }, { unique: true });
