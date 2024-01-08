@@ -80,7 +80,7 @@ exports.getRatings = async (type, id, queryObj) => {
     // Get ratings for a specific job
     if (type === "job") {
       features = new APIFeatures(
-        Rating.find({ jobId: id }).populate("user"),
+        Rating.find({ jobId: id }).populate("user").sort({ _id: -1 }),
         queryObj
       ).paginate();
       // ratings = await Rating.find({ jobId: id }).populate({
@@ -91,7 +91,7 @@ exports.getRatings = async (type, id, queryObj) => {
     // Get ratings for a specific company
     if (type === "company") {
       features = new APIFeatures(
-        Rating.find({ companyId: id }).populate("user"),
+        Rating.find({ companyId: id }).populate("user").sort({ _id: -1 }),
         queryObj
       ).paginate();
       // ratings = await Rating.find({ companyId: id }).populate({
