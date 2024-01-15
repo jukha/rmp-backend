@@ -12,7 +12,7 @@ const APIFeatures = require("../utils/apiFeatures");
 
 exports.signup = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email.toLowerCase() });
     if (!user) {
       if (!req.body.password) {
         return res.status(400).json({
@@ -66,7 +66,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email.toLowerCase() });
 
     if (user) {
       if (user.googleId) {

@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String },
 });
 
+userSchema.pre("save", function (next) {
+  this.email = this.email.toLowerCase();
+  next();
+});
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
